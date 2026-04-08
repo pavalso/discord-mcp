@@ -100,6 +100,12 @@ class TestChannelToolSchemas:
         required = schema.get("required", [])
         assert required == ["channel_id"]
 
+    def test_edit_channel_has_bitrate_and_user_limit(self):
+        schema = _get_tool_schema("edit_channel")
+        props = schema.get("properties", {})
+        assert "bitrate" in props
+        assert "user_limit" in props
+
     def test_set_channel_permissions_requires_target(self):
         schema = _get_tool_schema("set_channel_permissions")
         required = schema.get("required", [])
@@ -114,18 +120,18 @@ class TestListChannels:
         ch2 = _make_channel(id=2, name="voice", type="voice", position=1, bitrate=64000, user_limit=10)
         inject_bot.get_guild.return_value = MagicMock(channels=[ch1, ch2])
 
-        result = await mcp._tool_manager._tools["list_channels"].fn(guild_id=111)
+        result = await mcp._tool_manager._tools["list_channels"].fn(guild_id="111")
 
         assert len(result) == 2
-        assert result[0]["id"] == 1
+        assert result[0]["id"] == "1"
         assert result[0]["name"] == "general"
-        assert result[1]["id"] == 2
+        assert result[1]["id"] == "2"
 
     async def test_guild_not_found(self, inject_bot):
         inject_bot.get_guild.return_value = None
 
         with pytest.raises(ValueError, match="not found"):
-            await mcp._tool_manager._tools["list_channels"].fn(guild_id=999)
+            await mcp._tool_manager._tools["list_channels"].fn(guild_id="999")
 
 
 class TestGetChannel:
@@ -133,9 +139,9 @@ class TestGetChannel:
         ch = _make_channel(id=42, name="info", topic="Welcome!")
         inject_bot.get_channel.return_value = ch
 
-        result = await mcp._tool_manager._tools["get_channel"].fn(channel_id=42)
+        result = await mcp._tool_manager._tools["get_channel"].fn(channel_id="42")
 
-        assert result["id"] == 42
+        assert result["id"] == "42"
         assert result["name"] == "info"
         assert result["topic"] == "Welcome!"
 
@@ -143,7 +149,7 @@ class TestGetChannel:
         inject_bot.get_channel.return_value = None
 
         with pytest.raises(ValueError, match="not found"):
-            await mcp._tool_manager._tools["get_channel"].fn(channel_id=999)
+            await mcp._tool_manager._tools["get_channel"].fn(channel_id="999")
 
 
 class TestCreateTextChannel:
@@ -155,10 +161,10 @@ class TestCreateTextChannel:
         inject_bot.get_guild.return_value = guild
 
         result = await mcp._tool_manager._tools["create_text_channel"].fn(
-            guild_id=111, name="new-channel", topic="hello"
+            guild_id="111", name="new-channel", topic="hello"
         )
 
-        assert result["id"] == 50
+        assert result["id"] == "50"
         assert result["name"] == "new-channel"
         guild.create_text_channel.assert_awaited_once_with(
             "new-channel",
@@ -178,7 +184,7 @@ class TestCreateTextChannel:
         inject_bot.get_guild.return_value = guild
 
         await mcp._tool_manager._tools["create_text_channel"].fn(
-            guild_id=111, name="in-cat", category_id=200
+            guild_id="111", name="in-cat", category_id="200"
         )
 
         guild.create_text_channel.assert_awaited_once()
@@ -188,7 +194,7 @@ class TestCreateTextChannel:
     async def test_guild_not_found(self, inject_bot):
         inject_bot.get_guild.return_value = None
         with pytest.raises(ValueError):
-            await mcp._tool_manager._tools["create_text_channel"].fn(guild_id=999, name="x")
+            await mcp._tool_manager._tools["create_text_channel"].fn(guild_id="999", name="x")
 
 
 class TestCreateVoiceChannel:
@@ -200,10 +206,10 @@ class TestCreateVoiceChannel:
         inject_bot.get_guild.return_value = guild
 
         result = await mcp._tool_manager._tools["create_voice_channel"].fn(
-            guild_id=111, name="vc", bitrate=64000, user_limit=10
+            guild_id="111", name="vc", bitrate=64000, user_limit=10
         )
 
-        assert result["id"] == 60
+        assert result["id"] == "60"
         guild.create_voice_channel.assert_awaited_once()
 
     async def test_omits_bitrate_when_none(self, inject_bot):
@@ -213,7 +219,7 @@ class TestCreateVoiceChannel:
         guild.get_channel.return_value = None
         inject_bot.get_guild.return_value = guild
 
-        await mcp._tool_manager._tools["create_voice_channel"].fn(guild_id=111, name="vc2")
+        await mcp._tool_manager._tools["create_voice_channel"].fn(guild_id="111", name="vc2")
 
         call_kwargs = guild.create_voice_channel.call_args.kwargs
         assert "bitrate" not in call_kwargs
@@ -227,10 +233,10 @@ class TestCreateCategory:
         inject_bot.get_guild.return_value = guild
 
         result = await mcp._tool_manager._tools["create_category"].fn(
-            guild_id=111, name="My Category", reason="organizing"
+            guild_id="111", name="My Category", reason="organizing"
         )
 
-        assert result["id"] == 70
+        assert result["id"] == "70"
         guild.create_category.assert_awaited_once_with("My Category", reason="organizing")
 
 
@@ -243,10 +249,10 @@ class TestCreateForumChannel:
         inject_bot.get_guild.return_value = guild
 
         result = await mcp._tool_manager._tools["create_forum_channel"].fn(
-            guild_id=111, name="help-forum", topic="Ask questions"
+            guild_id="111", name="help-forum", topic="Ask questions"
         )
 
-        assert result["id"] == 80
+        assert result["id"] == "80"
         guild.create_forum.assert_awaited_once_with(
             "help-forum",
             topic="Ask questions",
@@ -264,7 +270,7 @@ class TestEditChannel:
         inject_bot.get_channel.return_value = ch
 
         result = await mcp._tool_manager._tools["edit_channel"].fn(
-            channel_id=100, name="updated", nsfw=True, reason="cleanup"
+            channel_id="100", name="updated", nsfw=True, reason="cleanup"
         )
 
         assert result["name"] == "updated"
@@ -275,7 +281,7 @@ class TestEditChannel:
         ch.edit = AsyncMock(return_value=ch)
         inject_bot.get_channel.return_value = ch
 
-        await mcp._tool_manager._tools["edit_channel"].fn(channel_id=101, name="new")
+        await mcp._tool_manager._tools["edit_channel"].fn(channel_id="101", name="new")
 
         ch.edit.assert_awaited_once_with(name="new")
 
@@ -284,14 +290,27 @@ class TestEditChannel:
         ch.edit = AsyncMock(return_value=None)
         inject_bot.get_channel.return_value = ch
 
-        result = await mcp._tool_manager._tools["edit_channel"].fn(channel_id=102, name="unchanged")
+        result = await mcp._tool_manager._tools["edit_channel"].fn(channel_id="102", name="unchanged")
 
         assert result["name"] == "unchanged"
+
+    async def test_edits_voice_channel_user_limit_and_bitrate(self, inject_bot):
+        ch = _make_channel(id=103, name="vc", type="voice", bitrate=96000, user_limit=15)
+        ch.edit = AsyncMock(return_value=ch)
+        inject_bot.get_channel.return_value = ch
+
+        result = await mcp._tool_manager._tools["edit_channel"].fn(
+            channel_id="103", user_limit=15, bitrate=96000, reason="set limits"
+        )
+
+        assert result["user_limit"] == 15
+        assert result["bitrate"] == 96000
+        ch.edit.assert_awaited_once_with(user_limit=15, bitrate=96000, reason="set limits")
 
     async def test_channel_not_found(self, inject_bot):
         inject_bot.get_channel.return_value = None
         with pytest.raises(ValueError):
-            await mcp._tool_manager._tools["edit_channel"].fn(channel_id=999)
+            await mcp._tool_manager._tools["edit_channel"].fn(channel_id="999")
 
 
 class TestDeleteChannel:
@@ -299,7 +318,7 @@ class TestDeleteChannel:
         ch = _make_channel(id=100, name="doomed")
         inject_bot.get_channel.return_value = ch
 
-        result = await mcp._tool_manager._tools["delete_channel"].fn(channel_id=100, reason="bye")
+        result = await mcp._tool_manager._tools["delete_channel"].fn(channel_id="100", reason="bye")
 
         assert "doomed" in result
         ch.delete.assert_awaited_once_with(reason="bye")
@@ -307,7 +326,7 @@ class TestDeleteChannel:
     async def test_channel_not_found(self, inject_bot):
         inject_bot.get_channel.return_value = None
         with pytest.raises(ValueError):
-            await mcp._tool_manager._tools["delete_channel"].fn(channel_id=999)
+            await mcp._tool_manager._tools["delete_channel"].fn(channel_id="999")
 
 
 class TestSetChannelPermissions:
@@ -318,8 +337,8 @@ class TestSetChannelPermissions:
         inject_bot.get_channel.return_value = ch
 
         result = await mcp._tool_manager._tools["set_channel_permissions"].fn(
-            channel_id=100,
-            target_id=200,
+            channel_id="100",
+            target_id="200",
             target_type="role",
             allow=["send_messages"],
             deny=["manage_messages"],
@@ -338,8 +357,8 @@ class TestSetChannelPermissions:
         inject_bot.get_channel.return_value = ch
 
         result = await mcp._tool_manager._tools["set_channel_permissions"].fn(
-            channel_id=100,
-            target_id=300,
+            channel_id="100",
+            target_id="300",
             target_type="member",
             allow=["read_messages"],
         )
@@ -354,10 +373,10 @@ class TestSetChannelPermissions:
         inject_bot.get_channel.return_value = ch
 
         await mcp._tool_manager._tools["set_channel_permissions"].fn(
-            channel_id=100, target_id=300, target_type="member"
+            channel_id="100", target_id="300", target_type="member"
         )
 
-        ch.guild.fetch_member.assert_awaited_once_with(300)
+        ch.guild.fetch_member.assert_awaited_once_with(300)  # int after conversion
 
     async def test_invalid_target_type(self, inject_bot):
         ch = _make_channel(id=100)
@@ -365,7 +384,7 @@ class TestSetChannelPermissions:
 
         with pytest.raises(ValueError, match="target_type"):
             await mcp._tool_manager._tools["set_channel_permissions"].fn(
-                channel_id=100, target_id=200, target_type="invalid"
+                channel_id="100", target_id="200", target_type="invalid"
             )
 
     async def test_role_not_found(self, inject_bot):
@@ -375,12 +394,12 @@ class TestSetChannelPermissions:
 
         with pytest.raises(ValueError, match="Role"):
             await mcp._tool_manager._tools["set_channel_permissions"].fn(
-                channel_id=100, target_id=200, target_type="role"
+                channel_id="100", target_id="200", target_type="role"
             )
 
     async def test_channel_not_found(self, inject_bot):
         inject_bot.get_channel.return_value = None
         with pytest.raises(ValueError):
             await mcp._tool_manager._tools["set_channel_permissions"].fn(
-                channel_id=999, target_id=200, target_type="role"
+                channel_id="999", target_id="200", target_type="role"
             )

@@ -22,7 +22,7 @@ class TestServerSetup:
 
     def test_total_tool_count(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
-        assert len(tools) == 74
+        assert len(tools) == 76
 
     def test_all_tools_have_descriptions(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
@@ -37,9 +37,9 @@ class TestServerSetup:
 
 EXPECTED_TOOL_NAMES = {
     # Connection
-    "connect", "disconnect", "bot_status",
+    "connect", "disconnect", "bot_status", "change_presence",
     # Messages
-    "send_message", "edit_message", "delete_message", "get_message",
+    "send_message", "send_embed", "edit_message", "delete_message", "get_message",
     "get_message_history", "pin_message", "unpin_message", "get_pinned_messages",
     "add_reaction", "remove_reaction", "clear_reactions",
     # Channels
@@ -167,6 +167,44 @@ class TestBotStatusTool:
         result = await bot_status()
         assert result["connected"] is True
         assert result["user"] == str(inject_bot.user)
-        assert result["user_id"] == inject_bot.user.id
+        assert result["user_id"] == str(inject_bot.user.id)
         assert result["guild_count"] == len(inject_bot.guilds)
         assert isinstance(result["latency_ms"], float)
+
+
+class TestChangePresenceTool:
+    async def test_change_status(self, inject_bot, mcp_server):
+        from discord_mcp.server import change_presence
+        inject_bot.change_presence = AsyncMock()
+        result = await change_presence(status="dnd")
+        assert "status=dnd" in result
+        inject_bot.change_presence.assert_awaited_once()
+
+    async def test_change_activity(self, inject_bot, mcp_server):
+        from discord_mcp.server import change_presence
+        inject_bot.change_presence = AsyncMock()
+        result = await change_presence(activity_type="playing", activity_name="a game")
+        assert "playing" in result
+        assert "a game" in result
+
+    async def test_invalid_status(self, inject_bot, mcp_server):
+        from discord_mcp.server import change_presence
+        result = await change_presence(status="bad")
+        assert "Error" in result
+
+    async def test_invalid_activity_type(self, inject_bot, mcp_server):
+        from discord_mcp.server import change_presence
+        result = await change_presence(activity_type="bad", activity_name="x")
+        assert "Error" in result
+
+    async def test_activity_type_without_name(self, inject_bot, mcp_server):
+        from discord_mcp.server import change_presence
+        result = await change_presence(activity_type="playing")
+        assert "Error" in result
+        assert "activity_name" in result
+
+    async def test_no_args_resets(self, inject_bot, mcp_server):
+        from discord_mcp.server import change_presence
+        inject_bot.change_presence = AsyncMock()
+        result = await change_presence()
+        assert "default" in result.lower()

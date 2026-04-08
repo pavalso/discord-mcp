@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
+import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
 
 
+def _role_to_dict(role: discord.Role) -> dict:
+    """Convert a role to a serialisable dict."""
+    return {
+        "id": str(role.id),
+        "name": role.name,
+        "color": role.color.value,
+        "hoist": role.hoist,
+        "position": role.position,
+        "managed": role.managed,
+        "mentionable": role.mentionable,
+        "permissions": [perm for perm, value in role.permissions if value],
+    }
+
+
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
-    async def list_roles(guild_id: int) -> list[dict]:
+    async def list_roles(guild_id: str) -> list[dict]:
         """List all roles in a guild.
 
         Args:
@@ -18,12 +33,16 @@ def register(mcp: FastMCP) -> None:
         Returns:
             List of roles with id, name, color, position, permissions, etc.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        guild = bot.get_guild(int(guild_id))
+        if guild is None:
+            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        return [_role_to_dict(r) for r in guild.roles]
 
     @mcp.tool()
     async def get_role(
-        guild_id: int,
-        role_id: int,
+        guild_id: str,
+        role_id: str,
     ) -> dict:
         """Get detailed information about a role.
 
@@ -31,11 +50,18 @@ def register(mcp: FastMCP) -> None:
             guild_id: Guild containing the role.
             role_id: Target role ID.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        guild = bot.get_guild(int(guild_id))
+        if guild is None:
+            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        role = guild.get_role(int(role_id))
+        if role is None:
+            raise ValueError(f"Role {role_id} not found in guild {guild_id}.")
+        return _role_to_dict(role)
 
     @mcp.tool()
     async def create_role(
-        guild_id: int,
+        guild_id: str,
         name: str,
         *,
         color: int | None = None,
@@ -55,12 +81,27 @@ def register(mcp: FastMCP) -> None:
             permissions: List of permission names to grant (e.g. ["send_messages", "manage_channels"]).
             reason: Audit log reason.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        guild = bot.get_guild(int(guild_id))
+        if guild is None:
+            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        kwargs: dict = {
+            "name": name,
+            "hoist": hoist,
+            "mentionable": mentionable,
+            "reason": reason,
+        }
+        if color is not None:
+            kwargs["color"] = discord.Colour(color)
+        if permissions is not None:
+            kwargs["permissions"] = discord.Permissions(**{p: True for p in permissions})
+        role = await guild.create_role(**kwargs)
+        return _role_to_dict(role)
 
     @mcp.tool()
     async def edit_role(
-        guild_id: int,
-        role_id: int,
+        guild_id: str,
+        role_id: str,
         *,
         name: str | None = None,
         color: int | None = None,
@@ -81,12 +122,33 @@ def register(mcp: FastMCP) -> None:
             permissions: New permission list (replaces current permissions).
             reason: Audit log reason.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        guild = bot.get_guild(int(guild_id))
+        if guild is None:
+            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        role = guild.get_role(int(role_id))
+        if role is None:
+            raise ValueError(f"Role {role_id} not found in guild {guild_id}.")
+        kwargs: dict = {}
+        if name is not None:
+            kwargs["name"] = name
+        if color is not None:
+            kwargs["color"] = discord.Colour(color)
+        if hoist is not None:
+            kwargs["hoist"] = hoist
+        if mentionable is not None:
+            kwargs["mentionable"] = mentionable
+        if permissions is not None:
+            kwargs["permissions"] = discord.Permissions(**{p: True for p in permissions})
+        if reason is not None:
+            kwargs["reason"] = reason
+        updated = await role.edit(**kwargs)
+        return _role_to_dict(updated or role)
 
     @mcp.tool()
     async def delete_role(
-        guild_id: int,
-        role_id: int,
+        guild_id: str,
+        role_id: str,
         *,
         reason: str | None = None,
     ) -> str:
@@ -97,4 +159,12 @@ def register(mcp: FastMCP) -> None:
             role_id: Role to delete.
             reason: Audit log reason.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        guild = bot.get_guild(int(guild_id))
+        if guild is None:
+            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        role = guild.get_role(int(role_id))
+        if role is None:
+            raise ValueError(f"Role {role_id} not found in guild {guild_id}.")
+        await role.delete(reason=reason)
+        return f"Deleted role {role.name} ({role_id})."

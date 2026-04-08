@@ -11,11 +11,11 @@ from discord_mcp.bot import get_bot
 def _channel_to_dict(channel: discord.abc.GuildChannel) -> dict:
     """Convert a guild channel to a serialisable dict."""
     data: dict = {
-        "id": channel.id,
+        "id": str(channel.id),
         "name": channel.name,
         "type": str(channel.type),
         "position": channel.position,
-        "category_id": getattr(channel, "category_id", None),
+        "category_id": str(channel.category_id) if getattr(channel, "category_id", None) else None,
     }
     if hasattr(channel, "topic"):
         data["topic"] = channel.topic
@@ -32,7 +32,7 @@ def _channel_to_dict(channel: discord.abc.GuildChannel) -> dict:
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
-    async def list_channels(guild_id: int) -> list[dict]:
+    async def list_channels(guild_id: str) -> list[dict]:
         """List all channels in a guild.
 
         Args:
@@ -42,31 +42,31 @@ def register(mcp: FastMCP) -> None:
             List of channels with id, name, type, category, and position.
         """
         bot = get_bot()
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(int(guild_id))
         if guild is None:
             raise ValueError(f"Guild {guild_id} not found (not in cache).")
         return [_channel_to_dict(ch) for ch in guild.channels]
 
     @mcp.tool()
-    async def get_channel(channel_id: int) -> dict:
+    async def get_channel(channel_id: str) -> dict:
         """Get detailed information about a channel.
 
         Args:
             channel_id: Target channel ID.
         """
         bot = get_bot()
-        channel = bot.get_channel(channel_id)
+        channel = bot.get_channel(int(channel_id))
         if channel is None:
             raise ValueError(f"Channel {channel_id} not found (not in cache).")
         return _channel_to_dict(channel)
 
     @mcp.tool()
     async def create_text_channel(
-        guild_id: int,
+        guild_id: str,
         name: str,
         *,
         topic: str | None = None,
-        category_id: int | None = None,
+        category_id: str | None = None,
         slowmode_delay: int = 0,
         nsfw: bool = False,
         reason: str | None = None,
@@ -83,11 +83,11 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(int(guild_id))
         if guild is None:
             raise ValueError(f"Guild {guild_id} not found (not in cache).")
 
-        category = guild.get_channel(category_id) if category_id else None
+        category = guild.get_channel(int(category_id)) if category_id else None
 
         channel = await guild.create_text_channel(
             name,
@@ -101,10 +101,10 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def create_voice_channel(
-        guild_id: int,
+        guild_id: str,
         name: str,
         *,
-        category_id: int | None = None,
+        category_id: str | None = None,
         bitrate: int | None = None,
         user_limit: int = 0,
         reason: str | None = None,
@@ -120,11 +120,11 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(int(guild_id))
         if guild is None:
             raise ValueError(f"Guild {guild_id} not found (not in cache).")
 
-        category = guild.get_channel(category_id) if category_id else None
+        category = guild.get_channel(int(category_id)) if category_id else None
 
         kwargs: dict = {
             "name": name,
@@ -140,7 +140,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def create_category(
-        guild_id: int,
+        guild_id: str,
         name: str,
         *,
         reason: str | None = None,
@@ -153,7 +153,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(int(guild_id))
         if guild is None:
             raise ValueError(f"Guild {guild_id} not found (not in cache).")
 
@@ -162,11 +162,11 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def create_forum_channel(
-        guild_id: int,
+        guild_id: str,
         name: str,
         *,
         topic: str | None = None,
-        category_id: int | None = None,
+        category_id: str | None = None,
         slowmode_delay: int = 0,
         nsfw: bool = False,
         reason: str | None = None,
@@ -183,11 +183,11 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(int(guild_id))
         if guild is None:
             raise ValueError(f"Guild {guild_id} not found (not in cache).")
 
-        category = guild.get_channel(category_id) if category_id else None
+        category = guild.get_channel(int(category_id)) if category_id else None
 
         channel = await guild.create_forum(
             name,
@@ -201,13 +201,15 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def edit_channel(
-        channel_id: int,
+        channel_id: str,
         *,
         name: str | None = None,
         topic: str | None = None,
         position: int | None = None,
         nsfw: bool | None = None,
         slowmode_delay: int | None = None,
+        bitrate: int | None = None,
+        user_limit: int | None = None,
         reason: str | None = None,
     ) -> dict:
         """Edit a channel's settings.
@@ -219,10 +221,12 @@ def register(mcp: FastMCP) -> None:
             position: New position.
             nsfw: New NSFW flag.
             slowmode_delay: New slowmode in seconds.
+            bitrate: Bitrate in bits per second (voice channels only, 8000-384000).
+            user_limit: Max users (voice channels only, 0 = unlimited).
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(channel_id)
+        channel = bot.get_channel(int(channel_id))
         if channel is None:
             raise ValueError(f"Channel {channel_id} not found (not in cache).")
 
@@ -237,6 +241,10 @@ def register(mcp: FastMCP) -> None:
             kwargs["nsfw"] = nsfw
         if slowmode_delay is not None:
             kwargs["slowmode_delay"] = slowmode_delay
+        if bitrate is not None:
+            kwargs["bitrate"] = bitrate
+        if user_limit is not None:
+            kwargs["user_limit"] = user_limit
         if reason is not None:
             kwargs["reason"] = reason
 
@@ -245,7 +253,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def delete_channel(
-        channel_id: int,
+        channel_id: str,
         *,
         reason: str | None = None,
     ) -> str:
@@ -256,7 +264,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(channel_id)
+        channel = bot.get_channel(int(channel_id))
         if channel is None:
             raise ValueError(f"Channel {channel_id} not found (not in cache).")
 
@@ -265,8 +273,8 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def set_channel_permissions(
-        channel_id: int,
-        target_id: int,
+        channel_id: str,
+        target_id: str,
         target_type: str,
         *,
         allow: list[str] | None = None,
@@ -284,18 +292,18 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(channel_id)
+        channel = bot.get_channel(int(channel_id))
         if channel is None:
             raise ValueError(f"Channel {channel_id} not found (not in cache).")
 
         if target_type == "role":
-            target = channel.guild.get_role(target_id)
+            target = channel.guild.get_role(int(target_id))
             if target is None:
                 raise ValueError(f"Role {target_id} not found.")
         elif target_type == "member":
-            target = channel.guild.get_member(target_id)
+            target = channel.guild.get_member(int(target_id))
             if target is None:
-                target = await channel.guild.fetch_member(target_id)
+                target = await channel.guild.fetch_member(int(target_id))
         else:
             raise ValueError(f"target_type must be 'role' or 'member', got '{target_type}'.")
 

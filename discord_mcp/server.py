@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import os
 
+import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot, start_bot, stop_bot
@@ -77,10 +78,66 @@ async def bot_status() -> dict:
     return {
         "connected": True,
         "user": str(bot.user),
-        "user_id": bot.user.id,
+        "user_id": str(bot.user.id),
         "guild_count": len(bot.guilds),
         "latency_ms": round(bot.latency * 1000, 2),
     }
+
+
+@mcp.tool()
+async def change_presence(
+    *,
+    status: str | None = None,
+    activity_type: str | None = None,
+    activity_name: str | None = None,
+) -> str:
+    """Change the bot's presence (status and/or activity).
+
+    Args:
+        status: One of 'online', 'idle', 'dnd', 'invisible'. Defaults to 'online'.
+        activity_type: One of 'playing', 'streaming', 'listening', 'watching', 'competing'.
+        activity_name: The text shown for the activity (e.g. 'a game').
+    """
+    bot = get_bot()
+
+    status_map = {
+        "online": discord.Status.online,
+        "idle": discord.Status.idle,
+        "dnd": discord.Status.dnd,
+        "invisible": discord.Status.invisible,
+    }
+
+    activity_type_map = {
+        "playing": discord.ActivityType.playing,
+        "streaming": discord.ActivityType.streaming,
+        "listening": discord.ActivityType.listening,
+        "watching": discord.ActivityType.watching,
+        "competing": discord.ActivityType.competing,
+    }
+
+    resolved_status = None
+    if status is not None:
+        resolved_status = status_map.get(status.lower())
+        if resolved_status is None:
+            return f"Error: Invalid status '{status}'. Must be one of: {', '.join(status_map)}."
+
+    activity = None
+    if activity_type is not None:
+        if activity_name is None:
+            return "Error: activity_name is required when activity_type is provided."
+        atype = activity_type_map.get(activity_type.lower())
+        if atype is None:
+            return f"Error: Invalid activity_type '{activity_type}'. Must be one of: {', '.join(activity_type_map)}."
+        activity = discord.Activity(type=atype, name=activity_name)
+
+    await bot.change_presence(status=resolved_status, activity=activity)
+
+    parts = []
+    if resolved_status:
+        parts.append(f"status={status.lower()}")
+    if activity:
+        parts.append(f"activity={activity_type.lower()} '{activity_name}'")
+    return f"Presence updated: {', '.join(parts)}." if parts else "Presence reset to default."
 
 
 # ---------------------------------------------------------------------------

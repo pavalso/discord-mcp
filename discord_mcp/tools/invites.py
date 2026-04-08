@@ -2,14 +2,30 @@
 
 from __future__ import annotations
 
+import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
 
 
+def _invite_to_dict(invite: discord.Invite) -> dict:
+    return {
+        "code": invite.code,
+        "url": invite.url,
+        "channel_id": str(invite.channel.id) if getattr(invite, "channel", None) else None,
+        "inviter_id": str(invite.inviter.id) if getattr(invite, "inviter", None) else None,
+        "max_age": invite.max_age,
+        "max_uses": invite.max_uses,
+        "uses": invite.uses,
+        "temporary": invite.temporary,
+        "created_at": str(invite.created_at) if invite.created_at else None,
+        "expires_at": str(invite.expires_at) if invite.expires_at else None,
+    }
+
+
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
-    async def list_invites(guild_id: int) -> list[dict]:
+    async def list_invites(guild_id: str) -> list[dict]:
         """List all active invites in a guild.
 
         Args:
@@ -18,11 +34,16 @@ def register(mcp: FastMCP) -> None:
         Returns:
             List of invites with code, channel, inviter, uses, max_uses, etc.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        guild = bot.get_guild(int(guild_id))
+        if guild is None:
+            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        invites = await guild.invites()
+        return [_invite_to_dict(i) for i in invites]
 
     @mcp.tool()
     async def create_invite(
-        channel_id: int,
+        channel_id: str,
         *,
         max_age: int = 86400,
         max_uses: int = 0,
@@ -40,7 +61,15 @@ def register(mcp: FastMCP) -> None:
             unique: Whether to create a new unique invite or reuse existing.
             reason: Audit log reason.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        channel = bot.get_channel(int(channel_id))
+        if channel is None:
+            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        invite = await channel.create_invite(
+            max_age=max_age, max_uses=max_uses, temporary=temporary,
+            unique=unique, reason=reason,
+        )
+        return _invite_to_dict(invite)
 
     @mcp.tool()
     async def delete_invite(
@@ -54,7 +83,10 @@ def register(mcp: FastMCP) -> None:
             invite_code: Invite code or full URL.
             reason: Audit log reason.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        invite = await bot.fetch_invite(invite_code)
+        await invite.delete(reason=reason)
+        return f"Deleted invite {invite_code}."
 
     @mcp.tool()
     async def get_invite(invite_code: str) -> dict:
@@ -63,4 +95,6 @@ def register(mcp: FastMCP) -> None:
         Args:
             invite_code: Invite code or full URL.
         """
-        raise NotImplementedError
+        bot = get_bot()
+        invite = await bot.fetch_invite(invite_code, with_counts=True, with_expiration=True)
+        return _invite_to_dict(invite)
