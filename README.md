@@ -1,5 +1,7 @@
 # Discord MCP Server
 
+[![CI](https://github.com/pavalso/discord-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/pavalso/discord-mcp/actions/workflows/ci.yml)
+
 An [MCP](https://modelcontextprotocol.io) server that exposes Discord bot
 operations as tools, so an MCP client (Claude Code, Claude Desktop, or anything
 else speaking the protocol) can manage a Discord server directly.
@@ -138,9 +140,16 @@ references for [core concepts](docs/core_concepts.md),
 python -m pytest tests/ -v                       # Full suite
 python -m pytest tests/ -k "send_message" -v     # One pattern
 
+ruff check .                                     # Lint
+ruff format .                                    # Format
+mypy                                             # Type check
+
 # Verify the server loads and count registered tools
 python -c "from discord_mcp.server import mcp; print(len(mcp._tool_manager.list_tools()), 'tools')"
 ```
+
+CI runs all of the above on every push and pull request, with the tests on
+Python 3.12 and 3.13.
 
 Tests never touch the network -- discord.py is mocked throughout. See
 [CLAUDE.md](CLAUDE.md) for the TDD workflow and code conventions this project
