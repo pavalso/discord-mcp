@@ -22,7 +22,7 @@ class TestServerSetup:
 
     def test_total_tool_count(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
-        assert len(tools) == 76
+        assert len(tools) == 85
 
     def test_all_tools_have_descriptions(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
@@ -70,6 +70,9 @@ EXPECTED_TOOL_NAMES = {
     # Moderation
     "get_audit_log", "list_bans", "purge_messages", "list_automod_rules",
     "create_automod_rule", "delete_automod_rule",
+    # Voice
+    "join_voice", "leave_voice", "voice_status", "set_voice_state",
+    "play_audio", "stop_audio", "pause_audio", "resume_audio", "set_volume",
 }
 
 

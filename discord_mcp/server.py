@@ -13,6 +13,7 @@ Exposes Discord bot operations as MCP tools, organized by domain:
   - Emoji/sticker management
   - Scheduled events
   - Moderation (audit log, automod, purge)
+  - Voice channel connections (join, leave, status, audio playback)
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ from discord_mcp.tools.moderation import register as register_moderation
 from discord_mcp.tools.roles import register as register_roles
 from discord_mcp.tools.scheduled_events import register as register_scheduled_events
 from discord_mcp.tools.threads import register as register_threads
+from discord_mcp.tools.voice import register as register_voice
 from discord_mcp.tools.webhooks import register as register_webhooks
 
 mcp = FastMCP("Discord MCP Server")
@@ -155,6 +157,7 @@ register_invites(mcp)
 register_emojis(mcp)
 register_scheduled_events(mcp)
 register_moderation(mcp)
+register_voice(mcp)
 
 
 # ---------------------------------------------------------------------------
