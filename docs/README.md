@@ -1,13 +1,13 @@
 # Discord MCP Server -- discord.py API Reference
 
-Reference documentation for the 92 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
+Reference documentation for the 93 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
 
 ## Index
 
 | Document | Module | Tools |
 |----------|--------|-------|
 | [connection.md](connection.md) | `server.py` | 4 -- connect, disconnect, status, presence |
-| [messages.md](messages.md) | `tools/messages.py` | 12 -- send, embed, edit, delete, get, history, pins, reactions |
+| [messages.md](messages.md) | `tools/messages.py` | 13 -- send, files, embed, edit, delete, get, history, pins, reactions |
 | [channels.md](channels.md) | `tools/channels.py` | 10 -- list, get, create (text/voice/stage/category/forum), edit, delete, permissions |
 | [threads.md](threads.md) | `tools/threads.py` | 9 -- create, edit, delete, list active/archived, join/leave, member management |
 | [members.md](members.md) | `tools/members.py` | 12 -- get user/member, list, search, kick, ban, timeout, edit, roles, DM |

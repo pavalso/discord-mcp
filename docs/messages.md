@@ -1,6 +1,6 @@
 # Messages Tools -- discord.py API Reference
 
-Tools in `discord_mcp/tools/messages.py` (11 tools).
+Tools in `discord_mcp/tools/messages.py` (13 tools).
 
 ---
 
@@ -58,6 +58,58 @@ await channel.send(content, reference=msg)
 - `embeds` (List[Embed]), `attachments` (List[Attachment])
 - `reactions` (List[Reaction]), `mentions` (List[User])
 - `jump_url` (str)
+
+---
+
+## send_file
+
+**Tool params:** `channel_id: str`, `file_paths: list[str]`, `*, content: str | None = None`, `spoiler: bool = False`, `reply_to_message_id: str | None = None`
+
+### API Calls
+
+#### `discord.File`
+
+```python
+discord.File(
+    fp,                                 # Path, or a file-like object
+    filename: str = None,
+    *,
+    spoiler: bool = False,
+    description: str = None,
+)
+```
+
+#### `abc.Messageable.send()`
+
+```python
+message = await channel.send(content=content, files=[file1, file2]) -> Message
+```
+
+**Permissions:** `send_messages` plus `attach_files`.
+
+**Notes:**
+- Each entry in `file_paths` is either a path on the machine running **this
+  server** (not the machine the MCP client runs on, if they differ) or an
+  http(s) URL. URLs are downloaded and re-uploaded, so the attachment is hosted
+  by Discord rather than hotlinked.
+- A URL's filename comes from the percent-decoded path, so
+  `.../cat%20photo.png` arrives as `cat photo.png`. A URL with no usable path
+  falls back to `attachment`.
+- A missing local file is rejected before anything is sent, rather than failing
+  partway through a multi-file upload.
+- `spoiler=True` prefixes each name with `SPOILER_`, which is how Discord marks
+  an attachment as hidden until clicked.
+- `content` is only sent when given, so attachments can stand alone.
+
+**Discord limits:**
+
+| Limit | Value |
+|-------|-------|
+| Attachments per message | 10 (rejected before the API call) |
+| Size per file | 10MB, or 50MB/100MB at boost tier 2/3 |
+
+**Raises:** `ValueError` (empty list, more than 10, missing file, channel not
+found), `HTTPException` (file too large).
 
 ---
 

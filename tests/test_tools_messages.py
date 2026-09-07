@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import ClassVar
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from mcp.server.fastmcp import FastMCP
@@ -63,6 +63,7 @@ def _tool_fn(name: str):
 class TestMessageToolsRegistration:
     EXPECTED: ClassVar[set[str]] = {
         "send_message",
+        "send_file",
         "send_embed",
         "edit_message",
         "delete_message",
@@ -212,6 +213,123 @@ class TestSendMessage:
 
         with pytest.raises(ValueError, match="not found"):
             await _tool_fn("send_message")(channel_id="999", content="hi")
+
+
+class TestSendFile:
+    async def test_sends_local_file(self, inject_bot, tmp_path):
+        path = tmp_path / "notes.txt"
+        path.write_bytes(b"hello from disk")
+        msg = _make_message()
+        channel = MagicMock()
+        channel.send = AsyncMock(return_value=msg)
+        inject_bot.get_channel.return_value = channel
+
+        result = await _tool_fn("send_file")(channel_id="100", file_paths=[str(path)])
+
+        call_kwargs = channel.send.call_args.kwargs
+        files = call_kwargs["files"]
+        assert len(files) == 1
+        assert files[0].filename == "notes.txt"
+        assert files[0].fp.read() == b"hello from disk"
+        # content is only sent when given, so an attachment-only message stays empty.
+        assert "content" not in call_kwargs
+        assert result["id"] == "1000"
+
+    async def test_sends_several_files_with_content(self, inject_bot, tmp_path):
+        first = tmp_path / "a.txt"
+        second = tmp_path / "b.txt"
+        first.write_bytes(b"a")
+        second.write_bytes(b"b")
+        channel = MagicMock()
+        channel.send = AsyncMock(return_value=_make_message())
+        inject_bot.get_channel.return_value = channel
+
+        await _tool_fn("send_file")(
+            channel_id="100", file_paths=[str(first), str(second)], content="two files"
+        )
+
+        call_kwargs = channel.send.call_args.kwargs
+        assert [f.filename for f in call_kwargs["files"]] == ["a.txt", "b.txt"]
+        assert call_kwargs["content"] == "two files"
+
+    async def test_marks_spoilers(self, inject_bot, tmp_path):
+        path = tmp_path / "secret.png"
+        path.write_bytes(b"img")
+        channel = MagicMock()
+        channel.send = AsyncMock(return_value=_make_message())
+        inject_bot.get_channel.return_value = channel
+
+        await _tool_fn("send_file")(channel_id="100", file_paths=[str(path)], spoiler=True)
+
+        sent = channel.send.call_args.kwargs["files"][0]
+        assert sent.filename == "SPOILER_secret.png"
+
+    async def test_sends_reply(self, inject_bot, tmp_path):
+        path = tmp_path / "a.txt"
+        path.write_bytes(b"a")
+        channel = MagicMock()
+        channel.send = AsyncMock(return_value=_make_message())
+        inject_bot.get_channel.return_value = channel
+
+        await _tool_fn("send_file")(
+            channel_id="100", file_paths=[str(path)], reply_to_message_id="999"
+        )
+
+        assert channel.send.call_args.kwargs["reference"].message_id == 999
+
+    @patch("discord_mcp.tools.messages.aiohttp.ClientSession")
+    async def test_downloads_url_and_reuploads(self, mock_session_cls, inject_bot):
+        channel = MagicMock()
+        channel.send = AsyncMock(return_value=_make_message())
+        inject_bot.get_channel.return_value = channel
+
+        resp = MagicMock()
+        resp.read = AsyncMock(return_value=b"downloaded-bytes")
+        resp.raise_for_status = MagicMock()
+        session = MagicMock()
+        session.get = MagicMock(
+            return_value=MagicMock(
+                __aenter__=AsyncMock(return_value=resp),
+                __aexit__=AsyncMock(return_value=False),
+            )
+        )
+        mock_session_cls.return_value = MagicMock(
+            __aenter__=AsyncMock(return_value=session),
+            __aexit__=AsyncMock(return_value=False),
+        )
+
+        await _tool_fn("send_file")(
+            channel_id="100", file_paths=["https://example.com/pics/cat%20photo.png"]
+        )
+
+        sent = channel.send.call_args.kwargs["files"][0]
+        # The URL-encoded name is decoded, and the query-free basename is used.
+        assert sent.filename == "cat photo.png"
+        assert sent.fp.read() == b"downloaded-bytes"
+
+    async def test_rejects_empty_list(self, inject_bot):
+        with pytest.raises(ValueError, match="at least one file"):
+            await _tool_fn("send_file")(channel_id="100", file_paths=[])
+
+    async def test_rejects_more_than_ten(self, inject_bot):
+        with pytest.raises(ValueError, match="at most 10 attachments"):
+            await _tool_fn("send_file")(channel_id="100", file_paths=[f"f{i}" for i in range(11)])
+
+    async def test_rejects_missing_file(self, inject_bot, tmp_path):
+        channel = MagicMock()
+        inject_bot.get_channel.return_value = channel
+
+        missing = str(tmp_path / "nope.txt")
+        with pytest.raises(ValueError, match="not an existing file or an http"):
+            await _tool_fn("send_file")(channel_id="100", file_paths=[missing])
+
+    async def test_channel_not_found(self, inject_bot, tmp_path):
+        path = tmp_path / "a.txt"
+        path.write_bytes(b"a")
+        inject_bot.get_channel.return_value = None
+
+        with pytest.raises(ValueError, match="not found"):
+            await _tool_fn("send_file")(channel_id="999", file_paths=[str(path)])
 
 
 class TestSendEmbed:

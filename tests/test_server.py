@@ -18,7 +18,7 @@ class TestServerSetup:
 
     def test_total_tool_count(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
-        assert len(tools) == 92
+        assert len(tools) == 93
 
     def test_all_tools_have_descriptions(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
@@ -41,6 +41,7 @@ EXPECTED_TOOL_NAMES = {
     "change_presence",
     # Messages
     "send_message",
+    "send_file",
     "send_embed",
     "edit_message",
     "delete_message",

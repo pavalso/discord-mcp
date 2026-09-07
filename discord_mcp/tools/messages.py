@@ -1,14 +1,21 @@
-"""Message tools — send, edit, delete, reply, reactions, history, pins."""
+"""Message tools — send, attach, edit, delete, reply, reactions, history, pins."""
 
 from __future__ import annotations
 
+import io
+import os
 from typing import cast
+from urllib.parse import unquote, urlparse
 
+import aiohttp
 import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
 from discord_mcp.tools._common import require_messageable
+
+#: Discord rejects a message carrying more than this many attachments.
+MAX_ATTACHMENTS = 10
 
 
 def _message_to_dict(message: discord.Message) -> dict:
@@ -32,6 +39,20 @@ def _message_to_dict(message: discord.Message) -> dict:
     }
 
 
+async def _build_file(source: str, *, spoiler: bool) -> discord.File:
+    """Turn a local path or an http(s) URL into an attachable discord.File."""
+    if source.startswith(("http://", "https://")):
+        filename = os.path.basename(unquote(urlparse(source).path)) or "attachment"
+        async with aiohttp.ClientSession() as session, session.get(source) as resp:
+            resp.raise_for_status()
+            data = await resp.read()
+        return discord.File(io.BytesIO(data), filename=filename, spoiler=spoiler)
+
+    if not os.path.isfile(source):
+        raise ValueError(f"Attachment '{source}' is not an existing file or an http(s) URL.")
+    return discord.File(source, filename=os.path.basename(source), spoiler=spoiler)
+
+
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def send_message(
@@ -53,6 +74,50 @@ def register(mcp: FastMCP) -> None:
         channel = require_messageable(bot, channel_id)
 
         kwargs: dict = {"content": content, "tts": tts}
+        if reply_to_message_id is not None:
+            kwargs["reference"] = discord.MessageReference(
+                message_id=int(reply_to_message_id), channel_id=int(channel_id)
+            )
+
+        message = await channel.send(**kwargs)
+        return _message_to_dict(message)
+
+    @mcp.tool()
+    async def send_file(
+        channel_id: str,
+        file_paths: list[str],
+        *,
+        content: str | None = None,
+        spoiler: bool = False,
+        reply_to_message_id: str | None = None,
+    ) -> dict:
+        """Send one or more file attachments to a Discord channel.
+
+        Args:
+            channel_id: Target channel ID.
+            file_paths: Files to attach. Each is either a path on the machine
+                running this server, or an http(s) URL to download and re-upload.
+                At most 10 per message.
+            content: Optional message text sent alongside the attachments.
+            spoiler: Send the attachments as spoilers, hidden until clicked.
+            reply_to_message_id: Message ID to reply to, if any.
+        """
+        if not file_paths:
+            raise ValueError("Pass at least one file path or URL.")
+        if len(file_paths) > MAX_ATTACHMENTS:
+            raise ValueError(
+                f"Discord allows at most {MAX_ATTACHMENTS} attachments per message "
+                f"(got {len(file_paths)})."
+            )
+
+        bot = get_bot()
+        channel = require_messageable(bot, channel_id)
+
+        files = [await _build_file(path, spoiler=spoiler) for path in file_paths]
+
+        kwargs: dict = {"files": files}
+        if content is not None:
+            kwargs["content"] = content
         if reply_to_message_id is not None:
             kwargs["reference"] = discord.MessageReference(
                 message_id=int(reply_to_message_id), channel_id=int(channel_id)
