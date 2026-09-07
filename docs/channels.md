@@ -1,6 +1,6 @@
 # Channels Tools -- discord.py API Reference
 
-Tools in `discord_mcp/tools/channels.py` (9 tools).
+Tools in `discord_mcp/tools/channels.py` (10 tools).
 
 ---
 
@@ -153,6 +153,45 @@ await guild.create_voice_channel(
 - Tier 1: 128000
 - Tier 2: 256000
 - Tier 3: 384000
+
+---
+
+## create_stage_channel
+
+**Tool params:** `guild_id: str`, `name: str`, `*, category_id`, `topic`, `bitrate`, `user_limit: int = 0`, `reason` -- the rest optional
+
+### API Calls
+
+#### `Guild.create_stage_channel()`
+
+```python
+channel = await guild.create_stage_channel(
+    name,
+    *,
+    topic: str = ...,
+    position: int = ...,
+    overwrites: Mapping = ...,
+    category: CategoryChannel = None,
+    reason: str = None,
+    rtc_region: str = None,
+    video_quality_mode: VideoQualityMode = ...,
+    bitrate: int = ...,
+    user_limit: int = ...,
+) -> StageChannel
+```
+
+**Permissions:** `manage_channels` required.
+
+**Notes:**
+- The guild must have the **COMMUNITY** feature enabled; otherwise Discord
+  rejects the request. Stage channels cannot exist in a non-community server.
+- A stage is a voice channel where only designated speakers transmit and
+  everyone else listens. `join_voice` connects the bot as audience -- see
+  [voice.md](voice.md).
+- `topic` and `bitrate` are only sent when given, so unset options keep
+  Discord's defaults.
+
+**Raises:** `Forbidden`, `HTTPException` (guild is not a community server).
 
 ---
 

@@ -138,6 +138,50 @@ def register(mcp: FastMCP) -> None:
         return _channel_to_dict(channel)
 
     @mcp.tool()
+    async def create_stage_channel(
+        guild_id: str,
+        name: str,
+        *,
+        category_id: str | None = None,
+        topic: str | None = None,
+        bitrate: int | None = None,
+        user_limit: int = 0,
+        reason: str | None = None,
+    ) -> dict:
+        """Create a new stage channel in a guild.
+
+        Stage channels are voice channels where only designated speakers may
+        talk and everyone else listens. The guild needs the COMMUNITY feature.
+
+        Args:
+            guild_id: Target guild.
+            name: Channel name.
+            category_id: Parent category ID.
+            topic: Stage topic.
+            bitrate: Bitrate in bits per second (8000-384000).
+            user_limit: Max users (0 = unlimited).
+            reason: Audit log reason.
+        """
+        bot = get_bot()
+        guild = require_guild(bot, guild_id)
+
+        category = require_category(guild, category_id)
+
+        kwargs: dict = {
+            "name": name,
+            "category": category,
+            "user_limit": user_limit,
+            "reason": reason,
+        }
+        if topic is not None:
+            kwargs["topic"] = topic
+        if bitrate is not None:
+            kwargs["bitrate"] = bitrate
+
+        channel = await guild.create_stage_channel(**kwargs)
+        return _channel_to_dict(channel)
+
+    @mcp.tool()
     async def create_category(
         guild_id: str,
         name: str,

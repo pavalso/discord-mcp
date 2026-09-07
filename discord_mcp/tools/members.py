@@ -28,7 +28,38 @@ def _member_to_dict(member: discord.Member) -> dict:
     }
 
 
+def _user_to_dict(user: discord.User) -> dict:
+    """Convert a global user (not a guild member) to a serialisable dict."""
+    return {
+        "id": str(user.id),
+        "name": user.name,
+        "global_name": user.global_name,
+        "display_name": user.display_name,
+        "bot": user.bot,
+        "system": user.system,
+        "avatar_url": str(user.display_avatar.url),
+        "banner_url": str(user.banner.url) if user.banner else None,
+        "accent_color": user.accent_color.value if user.accent_color else None,
+        "created_at": str(user.created_at),
+    }
+
+
 def register(mcp: FastMCP) -> None:
+    @mcp.tool()
+    async def get_user(user_id: str) -> dict:
+        """Fetch a Discord user by ID, whether or not they share a guild with the bot.
+
+        get_member returns richer, guild-scoped data (nickname, roles, join date)
+        but only works for members of a guild the bot is in. This works for any
+        user, and returns only their global profile.
+
+        Args:
+            user_id: Target user ID.
+        """
+        bot = get_bot()
+        user = await bot.fetch_user(int(user_id))
+        return _user_to_dict(user)
+
     @mcp.tool()
     async def get_member(
         guild_id: str,

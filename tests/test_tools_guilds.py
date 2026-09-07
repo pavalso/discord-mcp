@@ -48,7 +48,7 @@ def _make_mock_guild(
 
 
 class TestGuildToolsRegistration:
-    EXPECTED: ClassVar[set[str]] = {"list_guilds", "get_guild", "edit_guild"}
+    EXPECTED: ClassVar[set[str]] = {"list_guilds", "get_guild", "edit_guild", "leave_guild"}
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
@@ -184,3 +184,29 @@ class TestGuildToolsBehavior:
         )
 
         guild.edit.assert_awaited_once_with(name="X", reason="testing")
+
+    @patch("discord_mcp.tools.guilds.get_bot")
+    async def test_leave_guild(self, mock_get_bot):
+        mock_guild = _make_mock_guild(name="Doomed Server")
+        mock_guild.leave = AsyncMock()
+        mock_bot = MagicMock()
+        mock_bot.get_guild.return_value = mock_guild
+        mock_get_bot.return_value = mock_bot
+
+        test_mcp = FastMCP("test")
+        register(test_mcp)
+        result = await test_mcp._tool_manager._tools["leave_guild"].fn(guild_id="1")
+
+        assert result == "Left guild 'Doomed Server' (1)."
+        mock_guild.leave.assert_awaited_once()
+
+    @patch("discord_mcp.tools.guilds.get_bot")
+    async def test_leave_guild_not_found(self, mock_get_bot):
+        mock_bot = MagicMock()
+        mock_bot.get_guild.return_value = None
+        mock_get_bot.return_value = mock_bot
+
+        test_mcp = FastMCP("test")
+        register(test_mcp)
+        with pytest.raises(ValueError, match="Guild 999 not found"):
+            await test_mcp._tool_manager._tools["leave_guild"].fn(guild_id="999")

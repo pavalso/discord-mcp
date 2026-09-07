@@ -59,6 +59,7 @@ class TestChannelToolsRegistration:
         "get_channel",
         "create_text_channel",
         "create_voice_channel",
+        "create_stage_channel",
         "create_category",
         "create_forum_channel",
         "edit_channel",
@@ -408,3 +409,37 @@ class TestSetChannelPermissions:
             await mcp._tool_manager._tools["set_channel_permissions"].fn(
                 channel_id="999", target_id="200", target_type="role"
             )
+
+    async def test_create_stage_channel(self, inject_bot):
+        ch = _make_channel(id=9, name="town-hall", type="stage_voice")
+        guild = MagicMock()
+        guild.create_stage_channel = AsyncMock(return_value=ch)
+        inject_bot.get_guild.return_value = guild
+
+        result = await mcp._tool_manager._tools["create_stage_channel"].fn(
+            guild_id="1", name="town-hall", topic="All hands"
+        )
+
+        assert result["name"] == "town-hall"
+        kwargs = guild.create_stage_channel.await_args.kwargs
+        assert kwargs["name"] == "town-hall"
+        assert kwargs["topic"] == "All hands"
+        assert kwargs["user_limit"] == 0
+
+    async def test_create_stage_channel_omits_unset_options(self, inject_bot):
+        ch = _make_channel(id=9, name="stage", type="stage_voice")
+        guild = MagicMock()
+        guild.create_stage_channel = AsyncMock(return_value=ch)
+        inject_bot.get_guild.return_value = guild
+
+        await mcp._tool_manager._tools["create_stage_channel"].fn(guild_id="1", name="stage")
+
+        kwargs = guild.create_stage_channel.await_args.kwargs
+        assert "topic" not in kwargs
+        assert "bitrate" not in kwargs
+        assert kwargs["category"] is None
+
+    async def test_create_stage_channel_guild_not_found(self, inject_bot):
+        inject_bot.get_guild.return_value = None
+        with pytest.raises(ValueError, match="Guild 999 not found"):
+            await mcp._tool_manager._tools["create_stage_channel"].fn(guild_id="999", name="x")

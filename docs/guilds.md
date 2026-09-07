@@ -1,6 +1,6 @@
 # Guilds Tools -- discord.py API Reference
 
-Tools in `discord_mcp/tools/guilds.py` (3 tools).
+Tools in `discord_mcp/tools/guilds.py` (4 tools).
 
 ---
 
@@ -100,6 +100,33 @@ guild = await bot.fetch_guild(guild_id, with_counts=True)
 - `stickers` -> `Tuple[GuildSticker, ...]`
 - `scheduled_events` -> `Sequence[ScheduledEvent]`
 - `me` -> `Member` (the bot's member object)
+
+---
+
+## leave_guild
+
+**Tool params:** `guild_id: str`
+
+### API Calls
+
+```python
+guild = bot.get_guild(int(guild_id))
+```
+
+#### `Guild.leave()`
+
+```python
+await guild.leave()  # -> None
+```
+
+**Notes:**
+- Removes the bot from the guild. It cannot rejoin on its own; that needs a
+  fresh invite from someone still in the server.
+- Fails if the bot **owns** the guild -- an owner must transfer ownership or
+  delete the guild instead.
+- The guild's name is read before leaving, so the confirmation can still name it.
+
+**Raises:** `HTTPException` (including the owner case).
 
 ---
 

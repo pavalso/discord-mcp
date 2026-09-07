@@ -1,6 +1,6 @@
 # Discord MCP Server -- discord.py API Reference
 
-Reference documentation for the 89 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
+Reference documentation for the 92 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
 
 ## Index
 
@@ -8,11 +8,11 @@ Reference documentation for the 89 MCP tools in this project. Each file covers o
 |----------|--------|-------|
 | [connection.md](connection.md) | `server.py` | 4 -- connect, disconnect, status, presence |
 | [messages.md](messages.md) | `tools/messages.py` | 12 -- send, embed, edit, delete, get, history, pins, reactions |
-| [channels.md](channels.md) | `tools/channels.py` | 9 -- list, get, create (text/voice/category/forum), edit, delete, permissions |
+| [channels.md](channels.md) | `tools/channels.py` | 10 -- list, get, create (text/voice/stage/category/forum), edit, delete, permissions |
 | [threads.md](threads.md) | `tools/threads.py` | 9 -- create, edit, delete, list active/archived, join/leave, member management |
-| [members.md](members.md) | `tools/members.py` | 11 -- get, list, search, kick, ban, timeout, edit, roles, DM |
+| [members.md](members.md) | `tools/members.py` | 12 -- get user/member, list, search, kick, ban, timeout, edit, roles, DM |
 | [roles.md](roles.md) | `tools/roles.py` | 5 -- list, get, create, edit, delete |
-| [guilds.md](guilds.md) | `tools/guilds.py` | 3 -- list, get, edit |
+| [guilds.md](guilds.md) | `tools/guilds.py` | 4 -- list, get, edit, leave |
 | [webhooks.md](webhooks.md) | `tools/webhooks.py` | 5 -- list, create, send, edit, delete |
 | [invites.md](invites.md) | `tools/invites.py` | 4 -- list, create, delete, get |
 | [emojis.md](emojis.md) | `tools/emojis.py` | 8 -- list/create/edit/delete emojis and stickers |

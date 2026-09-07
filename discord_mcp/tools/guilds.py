@@ -129,3 +129,20 @@ def register(mcp: FastMCP) -> None:
 
         updated = await guild.edit(**kwargs)
         return _guild_to_dict(updated or guild)
+
+    @mcp.tool()
+    async def leave_guild(guild_id: str) -> str:
+        """Make the bot leave a guild.
+
+        This removes the bot from the server. It cannot undo itself -- getting
+        back in needs a fresh invite.
+
+        Args:
+            guild_id: Guild to leave.
+        """
+        bot = get_bot()
+        guild = require_guild(bot, guild_id)
+
+        name = guild.name
+        await guild.leave()
+        return f"Left guild '{name}' ({guild_id})."

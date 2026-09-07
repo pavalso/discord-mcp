@@ -1,6 +1,32 @@
 # Members Tools -- discord.py API Reference
 
-Tools in `discord_mcp/tools/members.py` (11 tools).
+Tools in `discord_mcp/tools/members.py` (12 tools).
+
+---
+
+## get_user
+
+**Tool params:** `user_id: str`
+
+### API Calls
+
+#### `Client.fetch_user()`
+
+```python
+user = await bot.fetch_user(user_id)  # -> User
+```
+
+**Notes:**
+- Works for **any** Discord user, including one who shares no guild with the
+  bot. `get_member` is guild-scoped and fails for those.
+- Returns the global profile only: no nickname, roles, or join date, since those
+  are per-guild. Use `get_member` when you have a guild and want that detail.
+- Always an API call; there is no cache lookup that covers arbitrary users.
+- `global_name` is the newer display name; `name` is the username.
+- `banner` and `accent_color` are only populated by a fetch, never from cache,
+  and are `None` for users who have not set them.
+
+**Raises:** `NotFound` (no such user), `HTTPException`.
 
 ---
 

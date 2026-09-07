@@ -18,7 +18,7 @@ class TestServerSetup:
 
     def test_total_tool_count(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
-        assert len(tools) == 89
+        assert len(tools) == 92
 
     def test_all_tools_have_descriptions(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
@@ -57,6 +57,7 @@ EXPECTED_TOOL_NAMES = {
     "get_channel",
     "create_text_channel",
     "create_voice_channel",
+    "create_stage_channel",
     "create_category",
     "create_forum_channel",
     "edit_channel",
@@ -73,6 +74,7 @@ EXPECTED_TOOL_NAMES = {
     "add_thread_member",
     "remove_thread_member",
     # Members
+    "get_user",
     "get_member",
     "list_members",
     "search_members",
@@ -94,6 +96,7 @@ EXPECTED_TOOL_NAMES = {
     "list_guilds",
     "get_guild",
     "edit_guild",
+    "leave_guild",
     # Webhooks
     "list_webhooks",
     "create_webhook",

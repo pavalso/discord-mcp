@@ -6,7 +6,7 @@ An [MCP](https://modelcontextprotocol.io) server that exposes Discord bot
 operations as tools, so an MCP client (Claude Code, Claude Desktop, or anything
 else speaking the protocol) can manage a Discord server directly.
 
-89 tools across 12 domains, built on [discord.py](https://discordpy.readthedocs.io)
+92 tools across 12 domains, built on [discord.py](https://discordpy.readthedocs.io)
 and the [`mcp`](https://github.com/modelcontextprotocol/python-sdk) SDK.
 
 ## Requirements
@@ -118,11 +118,11 @@ of raising when the bot is down.
 |--------|-------|-------|
 | [Connection](docs/connection.md) | 4 | connect, disconnect, bot_status, change_presence |
 | [Messages](docs/messages.md) | 12 | send, embeds, edit, delete, history, pins, reactions |
-| [Channels](docs/channels.md) | 9 | list, get, create (text/voice/category/forum), edit, delete, permissions |
+| [Channels](docs/channels.md) | 10 | list, get, create (text/voice/stage/category/forum), edit, delete, permissions |
 | [Threads](docs/threads.md) | 9 | create, edit, delete, list active/archived, join/leave, members |
-| [Members](docs/members.md) | 11 | get, list, search, kick, ban, timeout, edit, roles, DM |
+| [Members](docs/members.md) | 12 | get user/member, list, search, kick, ban, timeout, edit, roles, DM |
 | [Roles](docs/roles.md) | 5 | list, get, create, edit, delete |
-| [Guilds](docs/guilds.md) | 3 | list, get, edit |
+| [Guilds](docs/guilds.md) | 4 | list, get, edit, leave |
 | [Webhooks](docs/webhooks.md) | 5 | list, create, send, edit, delete |
 | [Invites](docs/invites.md) | 4 | list, create, delete, get |
 | [Emojis](docs/emojis.md) | 8 | list/create/edit/delete emojis and stickers |

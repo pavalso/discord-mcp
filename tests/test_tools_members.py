@@ -58,6 +58,7 @@ def _make_mock_guild(*, guild_id=100, member=None):
 
 class TestMemberToolsRegistration:
     EXPECTED: ClassVar[set[str]] = {
+        "get_user",
         "get_member",
         "list_members",
         "search_members",
@@ -367,3 +368,30 @@ class TestMemberToolsBehavior:
         result = await self.tools["send_dm"].fn(user_id="50", content="hi")
         assert result["id"] == "777"
         mock_bot.fetch_user.assert_awaited_once_with(50)
+
+    @patch("discord_mcp.tools.members.get_bot")
+    async def test_get_user(self, mock_get_bot):
+        mock_user = MagicMock()
+        mock_user.id = 555
+        mock_user.name = "globaluser"
+        mock_user.global_name = "Global User"
+        mock_user.display_name = "Global User"
+        mock_user.bot = False
+        mock_user.system = False
+        mock_user.display_avatar.url = "https://cdn.discordapp.com/avatars/555.png"
+        mock_user.banner = None
+        mock_user.accent_color = None
+        mock_user.created_at = "2020-01-01 00:00:00"
+        mock_bot = MagicMock()
+        mock_bot.fetch_user = AsyncMock(return_value=mock_user)
+        mock_get_bot.return_value = mock_bot
+
+        result = await self.tools["get_user"].fn(user_id="555")
+
+        assert result["id"] == "555"
+        assert result["name"] == "globaluser"
+        assert result["global_name"] == "Global User"
+        assert result["banner_url"] is None
+        # No guild is involved: this works for users the bot shares no server with.
+        mock_bot.fetch_user.assert_awaited_once_with(555)
+        mock_bot.get_guild.assert_not_called()
