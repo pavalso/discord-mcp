@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "Copy this to .mcp.json (which is gitignored) and edit the python path.",
+    "Do NOT paste your bot token here. Leave the env block out entirely and",
+    "export DISCORD_BOT_TOKEN in your shell instead -- the server process",
+    "inherits it, and the connect tool reads it from there. Claude Code also",
+    "expands ${DISCORD_BOT_TOKEN} inside this file if you prefer to be explicit.",
+    "A token committed or shared by accident must be regenerated in the",
+    "Discord Developer Portal; it cannot be un-leaked."
+  ],
+  "mcpServers": {
+    "discord": {
+      "command": "/absolute/path/to/discord-mcp/.venv/bin/python",
+      "args": ["-m", "discord_mcp.server"],
+      "env": {
+        "DISCORD_BOT_TOKEN": "${DISCORD_BOT_TOKEN}"
+      }
+    }
+  }
+}

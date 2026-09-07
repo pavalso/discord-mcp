@@ -73,16 +73,16 @@ lacks fail with `discord.Forbidden`.
 
 ## Configure your MCP client
 
-Add the server to your client's MCP config -- `.mcp.json` in the project root
-for Claude Code, or `claude_desktop_config.json` for Claude Desktop:
+Copy [`.mcp.json.example`](.mcp.json.example) to `.mcp.json` in the project root
+for Claude Code, or into `claude_desktop_config.json` for Claude Desktop, and
+set the python path:
 
 ```json
 {
   "mcpServers": {
     "discord": {
       "command": "/absolute/path/to/discord-mcp/.venv/bin/python",
-      "args": ["-m", "discord_mcp.server"],
-      "env": { "DISCORD_BOT_TOKEN": "your-token-here" }
+      "args": ["-m", "discord_mcp.server"]
     }
   }
 }
@@ -90,9 +90,21 @@ for Claude Code, or `claude_desktop_config.json` for Claude Desktop:
 
 On Windows the command is `.venv\\Scripts\\python.exe`.
 
-> **Keep the token out of version control.** `.mcp.json` is gitignored for
-> exactly this reason. A leaked bot token lets anyone drive your bot; if that
-> happens, regenerate it in the Developer Portal immediately.
+Then put the token in your environment rather than in the config file:
+
+```bash
+export DISCORD_BOT_TOKEN="your-token-here"      # Windows: setx DISCORD_BOT_TOKEN "..."
+```
+
+The server process inherits it, and `connect` reads it from there. Claude Code
+also expands `${DISCORD_BOT_TOKEN}` inside `.mcp.json` if you would rather name
+it explicitly, as the example file does.
+
+> **Never paste the token into a file you might commit.** `.mcp.json` is
+> gitignored for exactly this reason, but an editor, a screen share, or a pasted
+> config can leak it just as easily. A bot token grants full control of the bot,
+> so if one gets out, regenerate it in the Developer Portal -- it cannot be
+> un-leaked.
 
 The server speaks stdio and is started by the client -- there is nothing to run
 by hand.
