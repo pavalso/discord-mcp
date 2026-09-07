@@ -18,7 +18,7 @@ class TestServerSetup:
 
     def test_total_tool_count(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
-        assert len(tools) == 85
+        assert len(tools) == 88
 
     def test_all_tools_have_descriptions(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
@@ -107,8 +107,11 @@ EXPECTED_TOOL_NAMES = {
     # Emojis
     "list_emojis",
     "create_emoji",
+    "edit_emoji",
     "delete_emoji",
     "list_stickers",
+    "create_sticker",
+    "edit_sticker",
     "delete_sticker",
     # Scheduled events
     "list_scheduled_events",

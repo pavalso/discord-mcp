@@ -6,7 +6,7 @@ An [MCP](https://modelcontextprotocol.io) server that exposes Discord bot
 operations as tools, so an MCP client (Claude Code, Claude Desktop, or anything
 else speaking the protocol) can manage a Discord server directly.
 
-85 tools across 12 domains, built on [discord.py](https://discordpy.readthedocs.io)
+88 tools across 12 domains, built on [discord.py](https://discordpy.readthedocs.io)
 and the [`mcp`](https://github.com/modelcontextprotocol/python-sdk) SDK.
 
 ## Requirements
@@ -125,7 +125,7 @@ of raising when the bot is down.
 | [Guilds](docs/guilds.md) | 3 | list, get, edit |
 | [Webhooks](docs/webhooks.md) | 5 | list, create, send, edit, delete |
 | [Invites](docs/invites.md) | 4 | list, create, delete, get |
-| [Emojis](docs/emojis.md) | 5 | emojis and stickers |
+| [Emojis](docs/emojis.md) | 8 | list/create/edit/delete emojis and stickers |
 | [Scheduled events](docs/scheduled_events.md) | 4 | list, create, edit, delete |
 | [Moderation](docs/moderation.md) | 6 | audit log, bans, purge, automod |
 | [Voice](docs/voice.md) | 9 | join/leave/move, mute/deafen, status, audio playback |

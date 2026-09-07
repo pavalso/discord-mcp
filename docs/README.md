@@ -1,6 +1,6 @@
 # Discord MCP Server -- discord.py API Reference
 
-Reference documentation for the 85 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
+Reference documentation for the 88 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
 
 ## Index
 
@@ -15,7 +15,7 @@ Reference documentation for the 85 MCP tools in this project. Each file covers o
 | [guilds.md](guilds.md) | `tools/guilds.py` | 3 -- list, get, edit |
 | [webhooks.md](webhooks.md) | `tools/webhooks.py` | 5 -- list, create, send, edit, delete |
 | [invites.md](invites.md) | `tools/invites.py` | 4 -- list, create, delete, get |
-| [emojis.md](emojis.md) | `tools/emojis.py` | 5 -- list/create/delete emojis, list/delete stickers |
+| [emojis.md](emojis.md) | `tools/emojis.py` | 8 -- list/create/edit/delete emojis and stickers |
 | [scheduled_events.md](scheduled_events.md) | `tools/scheduled_events.py` | 4 -- list, create, edit, delete |
 | [moderation.md](moderation.md) | `tools/moderation.py` | 6 -- audit log, bans, purge, automod |
 | [voice.md](voice.md) | `tools/voice.py` | 9 -- join/leave/move, mute/deafen, status, audio playback |

@@ -1,6 +1,6 @@
 # Emojis & Stickers Tools -- discord.py API Reference
 
-Tools in `discord_mcp/tools/emojis.py` (5 tools).
+Tools in `discord_mcp/tools/emojis.py` (8 tools).
 
 ---
 
@@ -181,21 +181,107 @@ await sticker.delete(reason=reason)
 
 ---
 
-## Additional Reference: Editing Emojis/Stickers
+## edit_emoji
 
-Not currently a tool, but available if needed:
+**Tool params:** `guild_id: str`, `emoji_id: str`, `*, name: str | None = None`, `role_ids: list[str] | None = None`, `reason: str | None = None`
+
+### API Calls
 
 ```python
-# Edit emoji
-emoji = await guild.fetch_emoji(emoji_id)
-await emoji.edit(name="new_name", roles=[role1, role2], reason="rename")
-
-# Edit sticker
-sticker = await guild.fetch_sticker(sticker_id)
-await sticker.edit(
-    name="new_name",                    # 2-30 characters
-    description="new description",      # Empty or 2-100 characters
-    emoji="smile",                      # Related emoji name
-    reason="update",
-)
+guild = bot.get_guild(int(guild_id))
+emoji = await guild.fetch_emoji(int(emoji_id))
 ```
+
+#### `Emoji.edit()`
+
+```python
+emoji = await emoji.edit(
+    *,
+    name: str = MISSING,                # 2-32 characters
+    roles: Sequence[Snowflake] = MISSING,
+    reason: str | None = None,
+) -> Emoji
+```
+
+**Permissions:** `manage_expressions` required.
+
+**Notes:**
+- Only the fields given are sent, so a rename does not clear an existing role
+  restriction.
+- `role_ids` resolves each ID through the guild, raising
+  `Role {id} not found in guild {guild}.` for an unknown one rather than
+  silently dropping it.
+- An **empty** `role_ids` list clears the restriction and makes the emoji usable
+  by everyone; omitting the argument leaves the restriction as it is.
+- The emoji image cannot be changed. Delete and recreate instead.
+
+---
+
+## create_sticker
+
+**Tool params:** `guild_id: str`, `name: str`, `description: str`, `emoji: str`, `image_url: str`, `*, reason: str | None = None`
+
+### API Calls
+
+The image is downloaded with `aiohttp`, then wrapped in a `discord.File`:
+
+```python
+async with aiohttp.ClientSession() as session, session.get(image_url) as resp:
+    image_data = await resp.read()
+```
+
+#### `Guild.create_sticker()`
+
+```python
+sticker = await guild.create_sticker(
+    *,
+    name: str,                          # 2-30 characters
+    description: str,                   # 2-100 characters
+    emoji: str,                         # Unicode emoji acting as the tag
+    file: File,
+    reason: str | None = None,
+) -> GuildSticker
+```
+
+**Permissions:** `manage_expressions` required.
+
+**Notes:**
+- Unlike `create_emoji`, which takes raw `bytes`, this needs a `discord.File`;
+  the downloaded bytes are wrapped in `io.BytesIO`.
+- Discord limits: PNG, APNG, GIF or Lottie, at most 512KB, exactly 320x320.
+- `emoji` is a unicode emoji (`"😀"`), not the name of a custom one.
+- Sticker slots are limited by the guild's boost tier (5 at tier 0).
+
+**Raises:** `Forbidden`, `HTTPException` (bad image, or slots full).
+
+---
+
+## edit_sticker
+
+**Tool params:** `guild_id: str`, `sticker_id: str`, `*, name: str | None = None`, `description: str | None = None`, `emoji: str | None = None`, `reason: str | None = None`
+
+### API Calls
+
+```python
+guild = bot.get_guild(int(guild_id))
+sticker = await guild.fetch_sticker(int(sticker_id))
+```
+
+#### `GuildSticker.edit()`
+
+```python
+sticker = await sticker.edit(
+    *,
+    name: str = MISSING,                # 2-30 characters
+    description: str = MISSING,         # Empty, or 2-100 characters
+    emoji: str = MISSING,               # Unicode emoji tag
+    reason: str | None = None,
+) -> GuildSticker
+```
+
+**Permissions:** `manage_expressions` required.
+
+**Notes:**
+- Only the fields given are sent, so editing the description leaves the name and
+  emoji tag alone.
+- The sticker image cannot be changed. Delete and recreate instead.
