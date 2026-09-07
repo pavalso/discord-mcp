@@ -61,6 +61,68 @@ await channel.send(content, reference=msg)
 
 ---
 
+## send_embed
+
+**Tool params:** `channel_id: int`, `*, title`, `description`, `color: int`, `url`, `footer_text`, `footer_icon_url`, `image_url`, `thumbnail_url`, `author_name`, `author_url`, `author_icon_url`, `fields: list[dict]`, `content` -- all optional
+
+### API Calls
+
+```python
+channel = bot.get_channel(channel_id)
+```
+
+#### `discord.Embed`
+
+```python
+embed = discord.Embed(
+    title: str = None,
+    description: str = None,
+    color: Colour | int = None,
+    url: str = None,                         # Makes the title a link
+    timestamp: datetime = None,
+)
+embed.set_footer(text=..., icon_url=...)
+embed.set_image(url=...)                     # Large image at the bottom
+embed.set_thumbnail(url=...)                 # Small image top-right
+embed.set_author(name=..., url=..., icon_url=...)
+embed.add_field(name=..., value=..., inline=False)
+```
+
+#### `abc.Messageable.send()`
+
+```python
+message = await channel.send(content=content, embed=embed) -> Message
+```
+
+**Permissions:** `send_messages` plus `embed_links`.
+
+**Notes:**
+- Every field is optional and only applied when not `None`, so the embed carries
+  exactly what was asked for. An embed with nothing set sends as an empty box.
+- `color` is an integer, not a CSS string -- e.g. `0xFF5733` (16733491). It is
+  wrapped in `discord.Colour`.
+- `fields` is a list of dicts with `name`, `value`, and an optional `inline`
+  (defaulting to `False`, unlike discord.py's own `add_field`, which defaults to
+  `True`). Missing `name`/`value` raises `KeyError`.
+- `content` sends plain text alongside the embed, in the same message.
+- Sub-fields require their parent: `footer_icon_url` is ignored without
+  `footer_text`, and the author URLs without `author_name`.
+
+**Discord embed limits** (exceeding any of these raises `HTTPException`):
+
+| Element | Limit |
+|---------|-------|
+| `title` | 256 characters |
+| `description` | 4096 characters |
+| Fields | 25 per embed |
+| Field `name` | 256 characters |
+| Field `value` | 1024 characters |
+| `footer_text` | 2048 characters |
+| `author_name` | 256 characters |
+| Total across all embed text | 6000 characters |
+
+---
+
 ## edit_message
 
 **Tool params:** `channel_id: int`, `message_id: int`, `content: str`

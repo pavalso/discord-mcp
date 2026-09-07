@@ -1,12 +1,13 @@
 # Discord MCP Server -- discord.py API Reference
 
-Quick-reference documentation for implementing the 56 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
+Reference documentation for the 85 MCP tools in this project. Each file covers one tool module and maps tool functions to the discord.py API calls they require.
 
 ## Index
 
 | Document | Module | Tools |
 |----------|--------|-------|
-| [messages.md](messages.md) | `tools/messages.py` | 11 -- send, edit, delete, get, history, pins, reactions |
+| [connection.md](connection.md) | `server.py` | 4 -- connect, disconnect, status, presence |
+| [messages.md](messages.md) | `tools/messages.py` | 12 -- send, embed, edit, delete, get, history, pins, reactions |
 | [channels.md](channels.md) | `tools/channels.py` | 9 -- list, get, create (text/voice/category/forum), edit, delete, permissions |
 | [threads.md](threads.md) | `tools/threads.py` | 8 -- create, edit, delete, list, join/leave, member management |
 | [members.md](members.md) | `tools/members.py` | 11 -- get, list, search, kick, ban, timeout, edit, roles, DM |
@@ -17,6 +18,7 @@ Quick-reference documentation for implementing the 56 MCP tools in this project.
 | [emojis.md](emojis.md) | `tools/emojis.py` | 5 -- list/create/delete emojis, list/delete stickers |
 | [scheduled_events.md](scheduled_events.md) | `tools/scheduled_events.py` | 4 -- list, create, edit, delete |
 | [moderation.md](moderation.md) | `tools/moderation.py` | 6 -- audit log, bans, purge, automod |
+| [voice.md](voice.md) | `tools/voice.py` | 9 -- join/leave/move, mute/deafen, status, audio playback |
 | [core_concepts.md](core_concepts.md) | -- | Intents, cache vs fetch, permissions, async patterns |
 | [permissions_reference.md](permissions_reference.md) | -- | Full permissions flag list and PermissionOverwrite usage |
 | [enums_reference.md](enums_reference.md) | -- | Common enums: ChannelType, VerificationLevel, EntityType, etc. |
@@ -28,19 +30,29 @@ All tools follow the same pattern:
 ```python
 from discord_mcp.bot import get_bot
 
-@mcp.tool()
-async def tool_name(required_id: int, *, optional_param: str | None = None) -> str:
-    """Tool description for LLM consumption.
+def register(mcp: FastMCP) -> None:
+    @mcp.tool()
+    async def tool_name(required_id: str, *, optional_param: str | None = None) -> dict:
+        """Tool description for LLM consumption.
 
-    Args:
-        required_id: Description.
-        optional_param: Description.
-    """
-    bot = get_bot()
-    # Use bot.get_*() for cache lookups, bot.fetch_*() for API calls
-    # Perform discord.py operations
-    # Return JSON string or success message
+        Args:
+            required_id: Description.
+            optional_param: Description.
+        """
+        bot = get_bot()
+        # Use bot.get_*() for cache lookups, bot.fetch_*() for API calls
+        # Perform discord.py operations
+        # Return a dict, or a plain string for simple confirmations
 ```
+
+Two conventions worth noting, since the per-module docs below were written
+before implementation and still show `int` parameters:
+
+- **Snowflakes are passed as `str`, not `int`.** IDs exceed 2^53 and would lose
+  precision in a JSON number. Tools take `channel_id: str` and call
+  `int(channel_id)` internally; returned IDs are stringified too.
+- **Tools live inside a `register(mcp)` function** in their module, called from
+  `server.py`. Only the four connection tools are defined at module level.
 
 ## Cache vs Fetch
 
