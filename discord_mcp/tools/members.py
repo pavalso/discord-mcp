@@ -8,6 +8,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild, require_role
 
 
 def _member_to_dict(member: discord.Member) -> dict:
@@ -43,9 +44,7 @@ def register(mcp: FastMCP) -> None:
             Member details including name, nickname, roles, join date, etc.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         member = await guild.fetch_member(int(user_id))
         return _member_to_dict(member)
 
@@ -61,9 +60,7 @@ def register(mcp: FastMCP) -> None:
             limit: Max members to return (1-1000).
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         members = []
         async for m in guild.fetch_members(limit=limit):
             members.append(_member_to_dict(m))
@@ -83,9 +80,7 @@ def register(mcp: FastMCP) -> None:
             limit: Max results (1-1000).
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         members = await guild.query_members(query=query, limit=limit)
         return [_member_to_dict(m) for m in members]
 
@@ -104,9 +99,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         member = await guild.fetch_member(int(user_id))
         await member.kick(reason=reason)
         return f"Kicked user {user_id} from guild {guild_id}."
@@ -128,9 +121,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         await guild.ban(
             discord.Object(id=int(user_id)),
             delete_message_seconds=delete_message_seconds,
@@ -153,9 +144,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         await guild.unban(discord.Object(id=int(user_id)), reason=reason)
         return f"Unbanned user {user_id} from guild {guild_id}."
 
@@ -177,9 +166,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         member = await guild.fetch_member(int(user_id))
         if duration_seconds == 0:
             await member.timeout(None, reason=reason)
@@ -211,9 +198,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         member = await guild.fetch_member(int(user_id))
         kwargs: dict = {}
         if nickname is not None:
@@ -246,11 +231,9 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         member = await guild.fetch_member(int(user_id))
-        roles = [guild.get_role(int(rid)) for rid in role_ids]
+        roles = [require_role(guild, rid) for rid in role_ids]
         await member.add_roles(*roles, reason=reason)
         return f"Added {len(roles)} role(s) to user {user_id} in guild {guild_id}."
 
@@ -271,11 +254,9 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         member = await guild.fetch_member(int(user_id))
-        roles = [guild.get_role(int(rid)) for rid in role_ids]
+        roles = [require_role(guild, rid) for rid in role_ids]
         await member.remove_roles(*roles, reason=reason)
         return f"Removed {len(roles)} role(s) from user {user_id} in guild {guild_id}."
 

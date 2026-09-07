@@ -286,6 +286,38 @@ class TestMemberToolsBehavior:
         mock_member.add_roles.assert_awaited_once()
 
     @patch("discord_mcp.tools.members.get_bot")
+    async def test_add_member_roles_rejects_unknown_role(self, mock_get_bot):
+        # An unresolvable role ID used to become None and be handed to
+        # add_roles(); it must fail with a clear message instead.
+        mock_member = _make_mock_member(id=12)
+        mock_guild = _make_mock_guild(member=mock_member)
+        mock_guild.id = 100
+        mock_guild.get_role = MagicMock(return_value=None)
+        mock_bot = MagicMock()
+        mock_bot.get_guild.return_value = mock_guild
+        mock_get_bot.return_value = mock_bot
+
+        with pytest.raises(ValueError, match="Role 999 not found in guild 100"):
+            await self.tools["add_member_roles"].fn(guild_id="100", user_id="12", role_ids=["999"])
+        mock_member.add_roles.assert_not_awaited()
+
+    @patch("discord_mcp.tools.members.get_bot")
+    async def test_remove_member_roles_rejects_unknown_role(self, mock_get_bot):
+        mock_member = _make_mock_member(id=13)
+        mock_guild = _make_mock_guild(member=mock_member)
+        mock_guild.id = 100
+        mock_guild.get_role = MagicMock(return_value=None)
+        mock_bot = MagicMock()
+        mock_bot.get_guild.return_value = mock_guild
+        mock_get_bot.return_value = mock_bot
+
+        with pytest.raises(ValueError, match="Role 999 not found in guild 100"):
+            await self.tools["remove_member_roles"].fn(
+                guild_id="100", user_id="13", role_ids=["999"]
+            )
+        mock_member.remove_roles.assert_not_awaited()
+
+    @patch("discord_mcp.tools.members.get_bot")
     async def test_remove_member_roles(self, mock_get_bot):
         mock_member = _make_mock_member(id=13)
         mock_guild = _make_mock_guild(member=mock_member)

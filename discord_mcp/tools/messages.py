@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_messageable
 
 
 def _message_to_dict(message: discord.Message) -> dict:
@@ -47,9 +50,7 @@ def register(mcp: FastMCP) -> None:
             reply_to_message_id: Message ID to reply to, if any.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         kwargs: dict = {"content": content, "tts": tts}
         if reply_to_message_id is not None:
@@ -97,9 +98,7 @@ def register(mcp: FastMCP) -> None:
             content: Optional text content sent alongside the embed.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         embed = discord.Embed()
         if title is not None:
@@ -153,9 +152,7 @@ def register(mcp: FastMCP) -> None:
             content: New message content.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         edited = await message.edit(content=content)
@@ -173,9 +170,7 @@ def register(mcp: FastMCP) -> None:
             message_id: The message to delete.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         await message.delete()
@@ -193,9 +188,7 @@ def register(mcp: FastMCP) -> None:
             message_id: The message to fetch.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         return _message_to_dict(message)
@@ -216,9 +209,7 @@ def register(mcp: FastMCP) -> None:
             after_message_id: Get messages after this message ID.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         kwargs: dict = {"limit": limit}
         if before_message_id is not None:
@@ -243,9 +234,7 @@ def register(mcp: FastMCP) -> None:
             message_id: The message to pin.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         await message.pin()
@@ -263,9 +252,7 @@ def register(mcp: FastMCP) -> None:
             message_id: The message to unpin.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         await message.unpin()
@@ -279,9 +266,7 @@ def register(mcp: FastMCP) -> None:
             channel_id: Target channel ID.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         pinned: list[dict] = []
         async for msg in channel.pins():
@@ -302,9 +287,7 @@ def register(mcp: FastMCP) -> None:
             emoji: Unicode emoji or custom emoji string (e.g. "thumbsup" or "emoji_name:emoji_id").
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         await message.add_reaction(emoji)
@@ -326,16 +309,14 @@ def register(mcp: FastMCP) -> None:
             user_id: User whose reaction to remove. Omit for the bot's own reaction.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         if user_id is not None:
             user = discord.Object(id=int(user_id))
             await message.remove_reaction(emoji, user)
         else:
-            await message.remove_reaction(emoji, bot.user)
+            await message.remove_reaction(emoji, cast(discord.ClientUser, bot.user))
         return f"Removed reaction {emoji} from message {message_id}."
 
     @mcp.tool()
@@ -352,9 +333,7 @@ def register(mcp: FastMCP) -> None:
             emoji: Specific emoji to clear. Omit to clear all reactions.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_messageable(bot, channel_id)
 
         message = await channel.fetch_message(int(message_id))
         if emoji is not None:

@@ -7,6 +7,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild
 
 
 def _emoji_to_dict(emoji: discord.Emoji) -> dict:
@@ -45,9 +46,7 @@ def register(mcp: FastMCP) -> None:
             List of emojis with id, name, animated flag, and available roles.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         return [_emoji_to_dict(e) for e in guild.emojis]
 
     @mcp.tool()
@@ -67,9 +66,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         async with aiohttp.ClientSession() as session, session.get(image_url) as resp:
             image_data = await resp.read()
         emoji = await guild.create_custom_emoji(name=name, image=image_data, reason=reason)
@@ -90,9 +87,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         await guild.delete_emoji(discord.Object(id=int(emoji_id)), reason=reason)
         return f"Deleted emoji {emoji_id} from guild {guild_id}."
 
@@ -104,9 +99,7 @@ def register(mcp: FastMCP) -> None:
             guild_id: Target guild.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         return [_sticker_to_dict(s) for s in guild.stickers]
 
     @mcp.tool()
@@ -124,8 +117,6 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         await guild.delete_sticker(discord.Object(id=int(sticker_id)), reason=reason)
         return f"Deleted sticker {sticker_id} from guild {guild_id}."

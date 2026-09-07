@@ -8,6 +8,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild, require_text_channel
 
 ACTION_TYPE_MAP = {name: member for name, member in discord.AuditLogAction.__members__.items()}
 
@@ -82,9 +83,7 @@ def register(mcp: FastMCP) -> None:
             action_type: Filter by action type (e.g. "ban", "kick", "channel_create").
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         kwargs: dict = {"limit": limit}
         if user_id is not None:
@@ -112,9 +111,7 @@ def register(mcp: FastMCP) -> None:
             List of bans with user info and reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         bans: list[dict] = []
         async for ban_entry in guild.bans(limit=limit):
@@ -150,9 +147,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_text_channel(bot, channel_id)
 
         kwargs: dict = {"limit": limit, "reason": reason}
 
@@ -182,9 +177,7 @@ def register(mcp: FastMCP) -> None:
             guild_id: Target guild.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         rules = await guild.fetch_automod_rules()
         return [_automod_rule_to_dict(r) for r in rules]
@@ -220,9 +213,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         trigger = discord.AutoModTrigger(
             type=TRIGGER_TYPE_MAP[trigger_type],
@@ -242,7 +233,7 @@ def register(mcp: FastMCP) -> None:
             enabled=enabled,
             exempt_roles=exempt_roles,
             exempt_channels=exempt_channels,
-            reason=reason,
+            reason=reason,  # type: ignore[arg-type]
         )
         return _automod_rule_to_dict(rule)
 
@@ -261,10 +252,8 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         rule = await guild.fetch_automod_rule(int(rule_id))
-        await rule.delete(reason=reason)
+        await rule.delete(reason=reason)  # type: ignore[arg-type]
         return f"Deleted automod rule {rule.name} ({rule_id})."

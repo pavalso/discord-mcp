@@ -11,6 +11,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild
 
 log = logging.getLogger(__name__)
 
@@ -161,7 +162,9 @@ def register(mcp: FastMCP) -> None:
             return {**_connection_to_dict(existing, channel), "moved": True}
 
         try:
-            voice_client = await channel.connect(self_mute=self_mute, self_deaf=self_deaf)
+            voice_client: discord.VoiceClient = await channel.connect(
+                self_mute=self_mute, self_deaf=self_deaf
+            )
         except RuntimeError as exc:
             raise RuntimeError(
                 f"Voice connection failed: {exc}. Voice support requires the PyNaCl "
@@ -189,7 +192,7 @@ def register(mcp: FastMCP) -> None:
             raise ValueError("Pass at least one of self_mute or self_deaf.")
 
         voice_client = _require_voice_client(guild_id)
-        channel = cast(VoiceChannelLike, voice_client.channel)
+        channel = voice_client.channel
         current = _voice_state_flags(channel.guild)
 
         resolved_mute = current["self_mute"] if self_mute is None else self_mute
@@ -214,9 +217,7 @@ def register(mcp: FastMCP) -> None:
             guild_id: Guild whose voice connection should be closed.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         voice_client = cast(discord.VoiceClient | None, guild.voice_client)
         if voice_client is None:

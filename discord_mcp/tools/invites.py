@@ -6,14 +6,15 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild, require_guild_channel
 
 
 def _invite_to_dict(invite: discord.Invite) -> dict:
     return {
         "code": invite.code,
         "url": invite.url,
-        "channel_id": str(invite.channel.id) if getattr(invite, "channel", None) else None,
-        "inviter_id": str(invite.inviter.id) if getattr(invite, "inviter", None) else None,
+        "channel_id": str(invite.channel.id) if invite.channel is not None else None,
+        "inviter_id": str(invite.inviter.id) if invite.inviter is not None else None,
         "max_age": invite.max_age,
         "max_uses": invite.max_uses,
         "uses": invite.uses,
@@ -35,9 +36,7 @@ def register(mcp: FastMCP) -> None:
             List of invites with code, channel, inviter, uses, max_uses, etc.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         invites = await guild.invites()
         return [_invite_to_dict(i) for i in invites]
 
@@ -62,9 +61,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_guild_channel(bot, channel_id)
         invite = await channel.create_invite(
             max_age=max_age,
             max_uses=max_uses,

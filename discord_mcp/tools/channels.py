@@ -6,6 +6,13 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import (
+    require_category,
+    require_editable_channel,
+    require_guild,
+    require_guild_channel,
+    require_role,
+)
 
 
 def _channel_to_dict(channel: discord.abc.GuildChannel) -> dict:
@@ -42,9 +49,7 @@ def register(mcp: FastMCP) -> None:
             List of channels with id, name, type, category, and position.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         return [_channel_to_dict(ch) for ch in guild.channels]
 
     @mcp.tool()
@@ -55,9 +60,7 @@ def register(mcp: FastMCP) -> None:
             channel_id: Target channel ID.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_guild_channel(bot, channel_id)
         return _channel_to_dict(channel)
 
     @mcp.tool()
@@ -83,15 +86,13 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
-        category = guild.get_channel(int(category_id)) if category_id else None
+        category = require_category(guild, category_id)
 
         channel = await guild.create_text_channel(
             name,
-            topic=topic,
+            topic=topic,  # type: ignore[arg-type]
             category=category,
             slowmode_delay=slowmode_delay,
             nsfw=nsfw,
@@ -120,11 +121,9 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
-        category = guild.get_channel(int(category_id)) if category_id else None
+        category = require_category(guild, category_id)
 
         kwargs: dict = {
             "name": name,
@@ -153,9 +152,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         channel = await guild.create_category(name, reason=reason)
         return _channel_to_dict(channel)
@@ -183,15 +180,13 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
-        category = guild.get_channel(int(category_id)) if category_id else None
+        category = require_category(guild, category_id)
 
         channel = await guild.create_forum(
             name,
-            topic=topic,
+            topic=topic,  # type: ignore[arg-type]
             category=category,
             slowmode_delay=slowmode_delay,
             nsfw=nsfw,
@@ -226,9 +221,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_editable_channel(bot, channel_id)
 
         kwargs: dict = {}
         if name is not None:
@@ -264,9 +257,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_guild_channel(bot, channel_id)
 
         await channel.delete(reason=reason)
         return f"Deleted channel {channel.name} ({channel_id})."
@@ -292,18 +283,14 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_guild_channel(bot, channel_id)
 
+        target: discord.Role | discord.Member
         if target_type == "role":
-            target = channel.guild.get_role(int(target_id))
-            if target is None:
-                raise ValueError(f"Role {target_id} not found.")
+            target = require_role(channel.guild, target_id)
         elif target_type == "member":
-            target = channel.guild.get_member(int(target_id))
-            if target is None:
-                target = await channel.guild.fetch_member(int(target_id))
+            cached = channel.guild.get_member(int(target_id))
+            target = cached or await channel.guild.fetch_member(int(target_id))
         else:
             raise ValueError(f"target_type must be 'role' or 'member', got '{target_type}'.")
 

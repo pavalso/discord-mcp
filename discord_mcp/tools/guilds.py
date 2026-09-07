@@ -6,6 +6,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild
 
 
 def _guild_to_dict(guild: discord.Guild) -> dict:
@@ -72,9 +73,7 @@ def register(mcp: FastMCP) -> None:
             channel count, role count, premium tier, features, etc.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         return _guild_to_dict(guild)
 
     @mcp.tool()
@@ -106,9 +105,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         kwargs: dict = {}
         if name is not None:

@@ -6,6 +6,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild
 
 
 def _role_to_dict(role: discord.Role) -> dict:
@@ -34,9 +35,7 @@ def register(mcp: FastMCP) -> None:
             List of roles with id, name, color, position, permissions, etc.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         return [_role_to_dict(r) for r in guild.roles]
 
     @mcp.tool()
@@ -51,9 +50,7 @@ def register(mcp: FastMCP) -> None:
             role_id: Target role ID.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         role = guild.get_role(int(role_id))
         if role is None:
             raise ValueError(f"Role {role_id} not found in guild {guild_id}.")
@@ -83,9 +80,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         kwargs: dict = {
             "name": name,
             "hoist": hoist,
@@ -124,9 +119,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         role = guild.get_role(int(role_id))
         if role is None:
             raise ValueError(f"Role {role_id} not found in guild {guild_id}.")
@@ -161,9 +154,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         role = guild.get_role(int(role_id))
         if role is None:
             raise ValueError(f"Role {role_id} not found in guild {guild_id}.")

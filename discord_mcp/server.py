@@ -19,6 +19,7 @@ Exposes Discord bot operations as MCP tools, organized by domain:
 from __future__ import annotations
 
 import os
+from typing import cast
 
 import discord
 from mcp.server.fastmcp import FastMCP
@@ -59,7 +60,8 @@ async def connect(token: str | None = None) -> str:
         return "Error: No token provided and DISCORD_BOT_TOKEN env var is not set."
 
     bot = await start_bot(resolved_token)
-    return f"Connected as {bot.user} (ID: {bot.user.id})"
+    user = cast(discord.ClientUser, bot.user)
+    return f"Connected as {user} (ID: {user.id})"
 
 
 @mcp.tool()
@@ -77,10 +79,11 @@ async def bot_status() -> dict:
     except RuntimeError:
         return {"connected": False}
 
+    user = cast(discord.ClientUser, bot.user)
     return {
         "connected": True,
-        "user": str(bot.user),
-        "user_id": str(bot.user.id),
+        "user": str(user),
+        "user_id": str(user.id),
         "guild_count": len(bot.guilds),
         "latency_ms": round(bot.latency * 1000, 2),
     }
@@ -118,16 +121,20 @@ async def change_presence(
     }
 
     resolved_status = None
+    status_label = None
     if status is not None:
-        resolved_status = status_map.get(status.lower())
+        status_label = status.lower()
+        resolved_status = status_map.get(status_label)
         if resolved_status is None:
             return f"Error: Invalid status '{status}'. Must be one of: {', '.join(status_map)}."
 
     activity = None
+    activity_label = None
     if activity_type is not None:
         if activity_name is None:
             return "Error: activity_name is required when activity_type is provided."
-        atype = activity_type_map.get(activity_type.lower())
+        activity_label = activity_type.lower()
+        atype = activity_type_map.get(activity_label)
         if atype is None:
             valid = ", ".join(activity_type_map)
             return f"Error: Invalid activity_type '{activity_type}'. Must be one of: {valid}."
@@ -137,9 +144,9 @@ async def change_presence(
 
     parts = []
     if resolved_status:
-        parts.append(f"status={status.lower()}")
+        parts.append(f"status={status_label}")
     if activity:
-        parts.append(f"activity={activity_type.lower()} '{activity_name}'")
+        parts.append(f"activity={activity_label} '{activity_name}'")
     return f"Presence updated: {', '.join(parts)}." if parts else "Presence reset to default."
 
 

@@ -8,6 +8,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild
 
 ENTITY_TYPE_MAP = {
     "stage_instance": discord.EntityType.stage_instance,
@@ -40,7 +41,7 @@ def _event_to_dict(event: discord.ScheduledEvent) -> dict:
         "end_time": str(event.end_time) if event.end_time else None,
         "status": str(event.status),
         "location": event.location,
-        "channel_id": str(event.channel.id) if getattr(event, "channel", None) else None,
+        "channel_id": str(event.channel.id) if event.channel is not None else None,
         "creator_id": str(event.creator_id),
         "user_count": event.user_count,
     }
@@ -58,9 +59,7 @@ def register(mcp: FastMCP) -> None:
             List of events with id, name, description, start/end times, status, etc.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         events = await guild.fetch_scheduled_events(with_counts=True)
         return [_event_to_dict(e) for e in events]
 
@@ -91,9 +90,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         kwargs: dict = {
             "name": name,
             "start_time": _parse_iso(start_time),
@@ -136,9 +133,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         event = guild.get_scheduled_event(int(event_id))
         if event is None:
             event = await guild.fetch_scheduled_event(int(event_id))
@@ -173,9 +168,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
         event = guild.get_scheduled_event(int(event_id))
         if event is None:
             event = await guild.fetch_scheduled_event(int(event_id))

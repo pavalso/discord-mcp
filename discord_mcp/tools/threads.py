@@ -6,6 +6,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_guild, require_text_channel, require_thread
 
 
 def _thread_to_dict(thread: discord.Thread) -> dict:
@@ -48,9 +49,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_text_channel(bot, channel_id)
 
         kwargs: dict = {
             "name": name,
@@ -89,9 +88,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        thread = bot.get_channel(int(thread_id))
-        if thread is None:
-            raise ValueError(f"Thread {thread_id} not found (not in cache).")
+        thread = require_thread(bot, thread_id)
 
         kwargs: dict = {}
         if name is not None:
@@ -123,9 +120,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        thread = bot.get_channel(int(thread_id))
-        if thread is None:
-            raise ValueError(f"Thread {thread_id} not found (not in cache).")
+        thread = require_thread(bot, thread_id)
 
         await thread.delete(reason=reason)
         return f"Deleted thread {thread.name} ({thread_id})."
@@ -138,9 +133,7 @@ def register(mcp: FastMCP) -> None:
             guild_id: Target guild ID.
         """
         bot = get_bot()
-        guild = bot.get_guild(int(guild_id))
-        if guild is None:
-            raise ValueError(f"Guild {guild_id} not found (not in cache).")
+        guild = require_guild(bot, guild_id)
 
         threads = await guild.active_threads()
         return [_thread_to_dict(t) for t in threads]
@@ -153,9 +146,7 @@ def register(mcp: FastMCP) -> None:
             thread_id: Thread to join.
         """
         bot = get_bot()
-        thread = bot.get_channel(int(thread_id))
-        if thread is None:
-            raise ValueError(f"Thread {thread_id} not found (not in cache).")
+        thread = require_thread(bot, thread_id)
 
         await thread.join()
         return f"Joined thread {thread.name} ({thread_id})."
@@ -168,9 +159,7 @@ def register(mcp: FastMCP) -> None:
             thread_id: Thread to leave.
         """
         bot = get_bot()
-        thread = bot.get_channel(int(thread_id))
-        if thread is None:
-            raise ValueError(f"Thread {thread_id} not found (not in cache).")
+        thread = require_thread(bot, thread_id)
 
         await thread.leave()
         return f"Left thread {thread.name} ({thread_id})."
@@ -187,9 +176,7 @@ def register(mcp: FastMCP) -> None:
             user_id: User to add.
         """
         bot = get_bot()
-        thread = bot.get_channel(int(thread_id))
-        if thread is None:
-            raise ValueError(f"Thread {thread_id} not found (not in cache).")
+        thread = require_thread(bot, thread_id)
 
         await thread.add_user(discord.Object(id=int(user_id)))
         return f"Added user {user_id} to thread {thread.name} ({thread_id})."
@@ -206,9 +193,7 @@ def register(mcp: FastMCP) -> None:
             user_id: User to remove.
         """
         bot = get_bot()
-        thread = bot.get_channel(int(thread_id))
-        if thread is None:
-            raise ValueError(f"Thread {thread_id} not found (not in cache).")
+        thread = require_thread(bot, thread_id)
 
         await thread.remove_user(discord.Object(id=int(user_id)))
         return f"Removed user {user_id} from thread {thread.name} ({thread_id})."

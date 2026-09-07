@@ -6,6 +6,7 @@ import discord
 from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.bot import get_bot
+from discord_mcp.tools._common import require_text_channel
 
 
 def _webhook_to_dict(webhook: discord.Webhook) -> dict:
@@ -35,9 +36,7 @@ def register(mcp: FastMCP) -> None:
         """
         bot = get_bot()
         if channel_id is not None:
-            channel = bot.get_channel(int(channel_id))
-            if channel is None:
-                raise ValueError(f"Channel {channel_id} not found (not in cache).")
+            channel = require_text_channel(bot, channel_id)
             webhooks = await channel.webhooks()
         elif guild_id is not None:
             guild = bot.get_guild(int(guild_id))
@@ -63,9 +62,7 @@ def register(mcp: FastMCP) -> None:
             reason: Audit log reason.
         """
         bot = get_bot()
-        channel = bot.get_channel(int(channel_id))
-        if channel is None:
-            raise ValueError(f"Channel {channel_id} not found (not in cache).")
+        channel = require_text_channel(bot, channel_id)
         webhook = await channel.create_webhook(name=name, reason=reason)
         return _webhook_to_dict(webhook)
 
