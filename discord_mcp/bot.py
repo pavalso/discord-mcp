@@ -37,7 +37,7 @@ async def start_bot(token: str) -> commands.Bot:
     ready_event = asyncio.Event()
 
     @_bot.event
-    async def on_ready():
+    async def on_ready() -> None:
         log.info("Discord bot connected as %s", _bot.user)
         ready_event.set()
 
@@ -45,7 +45,7 @@ async def start_bot(token: str) -> commands.Bot:
 
     try:
         await asyncio.wait_for(ready_event.wait(), timeout=30)
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         _bot_task.cancel()
         raise RuntimeError("Discord bot failed to connect within 30 seconds") from exc
 
@@ -68,7 +68,5 @@ async def stop_bot() -> None:
 def get_bot() -> commands.Bot:
     """Get the running bot instance. Raises if bot is not started."""
     if _bot is None or not _bot.is_ready():
-        raise RuntimeError(
-            "Discord bot is not connected. Call the 'connect' tool first."
-        )
+        raise RuntimeError("Discord bot is not connected. Call the 'connect' tool first.")
     return _bot

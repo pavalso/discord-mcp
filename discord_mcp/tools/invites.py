@@ -66,8 +66,11 @@ def register(mcp: FastMCP) -> None:
         if channel is None:
             raise ValueError(f"Channel {channel_id} not found (not in cache).")
         invite = await channel.create_invite(
-            max_age=max_age, max_uses=max_uses, temporary=temporary,
-            unique=unique, reason=reason,
+            max_age=max_age,
+            max_uses=max_uses,
+            temporary=temporary,
+            unique=unique,
+            reason=reason,
         )
         return _invite_to_dict(invite)
 

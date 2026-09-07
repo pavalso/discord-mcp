@@ -86,9 +86,7 @@ def _require_voice_client(guild_id: str) -> discord.VoiceClient:
 
 def _check_volume(volume: float) -> None:
     if not MIN_VOLUME <= volume <= MAX_VOLUME:
-        raise ValueError(
-            f"volume must be between {MIN_VOLUME} and {MAX_VOLUME} (got {volume})."
-        )
+        raise ValueError(f"volume must be between {MIN_VOLUME} and {MAX_VOLUME} (got {volume}).")
 
 
 def _build_audio_source(source: str, volume: float) -> discord.PCMVolumeTransformer:
@@ -102,9 +100,7 @@ def _build_audio_source(source: str, volume: float) -> discord.PCMVolumeTransfor
 
     is_stream = source.startswith(("http://", "https://"))
     if not is_stream and not os.path.isfile(source):
-        raise ValueError(
-            f"Audio source '{source}' is not an existing file or an http(s) URL."
-        )
+        raise ValueError(f"Audio source '{source}' is not an existing file or an http(s) URL.")
 
     audio = discord.FFmpegPCMAudio(
         source,
@@ -151,9 +147,7 @@ def register(mcp: FastMCP) -> None:
             raise ValueError(f"Channel {channel_id} not found (not in cache).")
         channel_type = getattr(found, "type", None)
         if str(channel_type) not in VOICE_CHANNEL_TYPES:
-            raise ValueError(
-                f"Channel {channel_id} is not a voice channel (type: {channel_type})."
-            )
+            raise ValueError(f"Channel {channel_id} is not a voice channel (type: {channel_type}).")
         channel = cast(VoiceChannelLike, found)
 
         existing = cast(discord.VoiceClient | None, channel.guild.voice_client)

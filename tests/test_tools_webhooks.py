@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-import pytest
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.webhooks import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -33,16 +35,19 @@ def _make_webhook(*, id=1, name="TestHook"):
 
 
 class TestWebhookToolsRegistration:
-    EXPECTED = {
-        "list_webhooks", "create_webhook", "send_webhook_message",
-        "edit_webhook", "delete_webhook",
+    EXPECTED: ClassVar[set[str]] = {
+        "list_webhooks",
+        "create_webhook",
+        "send_webhook_message",
+        "edit_webhook",
+        "delete_webhook",
     }
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestWebhookToolSchemas:

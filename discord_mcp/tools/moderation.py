@@ -118,11 +118,13 @@ def register(mcp: FastMCP) -> None:
 
         bans: list[dict] = []
         async for ban_entry in guild.bans(limit=limit):
-            bans.append({
-                "user_id": str(ban_entry.user.id),
-                "user_name": ban_entry.user.name,
-                "reason": ban_entry.reason,
-            })
+            bans.append(
+                {
+                    "user_id": str(ban_entry.user.id),
+                    "user_name": ban_entry.user.name,
+                    "reason": ban_entry.reason,
+                }
+            )
         return bans
 
     @mcp.tool()
@@ -156,12 +158,12 @@ def register(mcp: FastMCP) -> None:
 
         if user_id is not None or contains is not None:
             _user_id_int = int(user_id) if user_id is not None else None
+
             def check(message: discord.Message) -> bool:
                 if _user_id_int is not None and message.author.id != _user_id_int:
                     return False
-                if contains is not None and contains not in message.content:
-                    return False
-                return True
+                return contains is None or contains in message.content
+
             kwargs["check"] = check
 
         if before_message_id is not None:

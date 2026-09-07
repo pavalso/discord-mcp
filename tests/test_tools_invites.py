@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.invites import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -39,13 +40,13 @@ def _make_mock_invite(**overrides):
 
 
 class TestInviteToolsRegistration:
-    EXPECTED = {"list_invites", "create_invite", "delete_invite", "get_invite"}
+    EXPECTED: ClassVar[set[str]] = {"list_invites", "create_invite", "delete_invite", "get_invite"}
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestInviteToolSchemas:
@@ -116,7 +117,11 @@ class TestInviteToolsBehavior:
 
         assert result["code"] == "abc123"
         mock_channel.create_invite.assert_called_once_with(
-            max_age=86400, max_uses=0, temporary=False, unique=True, reason=None,
+            max_age=86400,
+            max_uses=0,
+            temporary=False,
+            unique=True,
+            reason=None,
         )
 
     @patch("discord_mcp.tools.invites.get_bot")
@@ -156,4 +161,6 @@ class TestInviteToolsBehavior:
         result = await test_mcp._tool_manager._tools["get_invite"].fn(invite_code="abc123")
 
         assert result["code"] == "abc123"
-        mock_bot.fetch_invite.assert_called_once_with("abc123", with_counts=True, with_expiration=True)
+        mock_bot.fetch_invite.assert_called_once_with(
+            "abc123", with_counts=True, with_expiration=True
+        )

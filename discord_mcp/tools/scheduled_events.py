@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import discord
 from mcp.server.fastmcp import FastMCP
@@ -26,7 +26,7 @@ EVENT_STATUS_MAP = {
 def _parse_iso(iso_string: str) -> datetime:
     dt = datetime.fromisoformat(iso_string)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 

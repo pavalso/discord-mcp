@@ -97,7 +97,11 @@ def register(mcp: FastMCP) -> None:
         if thread_id is not None:
             kwargs["thread"] = discord.Object(id=int(thread_id))
         message = await webhook.send(content, **kwargs)
-        return {"id": str(message.id), "content": message.content, "channel_id": str(message.channel.id)}
+        return {
+            "id": str(message.id),
+            "content": message.content,
+            "channel_id": str(message.channel.id),
+        }
 
     @mcp.tool()
     async def edit_webhook(

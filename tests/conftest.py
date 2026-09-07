@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 import discord_mcp.bot as bot_module
-
 
 # ---------------------------------------------------------------------------
 # Mock Discord objects
@@ -23,7 +22,9 @@ def make_mock_user(*, id: int = 123456789, name: str = "TestBot", discriminator:
     return user
 
 
-def make_mock_guild(*, id: int = 111111111, name: str = "Test Guild", member_count: int = 42, owner_id: int = 999):
+def make_mock_guild(
+    *, id: int = 111111111, name: str = "Test Guild", member_count: int = 42, owner_id: int = 999
+):
     guild = MagicMock()
     guild.id = id
     guild.name = name
@@ -75,4 +76,5 @@ def inject_bot(mock_bot):
 def mcp_server():
     """The FastMCP server instance with all tools registered."""
     from discord_mcp.server import mcp
+
     return mcp

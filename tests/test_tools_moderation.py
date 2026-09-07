@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.moderation import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -54,16 +55,20 @@ def _make_automod_rule(*, id=1, name="TestRule"):
 
 
 class TestModerationToolsRegistration:
-    EXPECTED = {
-        "get_audit_log", "list_bans", "purge_messages",
-        "list_automod_rules", "create_automod_rule", "delete_automod_rule",
+    EXPECTED: ClassVar[set[str]] = {
+        "get_audit_log",
+        "list_bans",
+        "purge_messages",
+        "list_automod_rules",
+        "create_automod_rule",
+        "delete_automod_rule",
     }
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestModerationToolSchemas:
@@ -236,7 +241,9 @@ class TestModerationToolsBehavior:
         mock_get_bot.return_value = mock_bot
 
         result = await self.tools["create_automod_rule"].fn(
-            guild_id="1", name="BlockBadWords", trigger_type="keyword",
+            guild_id="1",
+            name="BlockBadWords",
+            trigger_type="keyword",
             actions=[{"type": "block_message"}],
             keyword_filter=["badword"],
         )
@@ -252,7 +259,9 @@ class TestModerationToolsBehavior:
 
         with pytest.raises(ValueError, match="not found"):
             await self.tools["create_automod_rule"].fn(
-                guild_id="999", name="x", trigger_type="keyword",
+                guild_id="999",
+                name="x",
+                trigger_type="keyword",
                 actions=[{"type": "block_message"}],
             )
 
@@ -265,7 +274,9 @@ class TestModerationToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["delete_automod_rule"].fn(guild_id="1", rule_id="3", reason="cleanup")
+        result = await self.tools["delete_automod_rule"].fn(
+            guild_id="1", rule_id="3", reason="cleanup"
+        )
         assert "OldRule" in result
         rule.delete.assert_awaited_once_with(reason="cleanup")
 

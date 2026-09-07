@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.members import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -56,17 +57,25 @@ def _make_mock_guild(*, guild_id=100, member=None):
 
 
 class TestMemberToolsRegistration:
-    EXPECTED = {
-        "get_member", "list_members", "search_members", "kick_member",
-        "ban_member", "unban_member", "timeout_member", "edit_member",
-        "add_member_roles", "remove_member_roles", "send_dm",
+    EXPECTED: ClassVar[set[str]] = {
+        "get_member",
+        "list_members",
+        "search_members",
+        "kick_member",
+        "ban_member",
+        "unban_member",
+        "timeout_member",
+        "edit_member",
+        "add_member_roles",
+        "remove_member_roles",
+        "send_dm",
     }
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestMemberToolSchemas:
@@ -201,7 +210,9 @@ class TestMemberToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["ban_member"].fn(guild_id="100", user_id="9", delete_message_seconds=3600, reason="abuse")
+        result = await self.tools["ban_member"].fn(
+            guild_id="100", user_id="9", delete_message_seconds=3600, reason="abuse"
+        )
         assert "Banned user 9" in result
         mock_guild.ban.assert_awaited_once()
 
@@ -212,7 +223,9 @@ class TestMemberToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["unban_member"].fn(guild_id="100", user_id="9", reason="appeal accepted")
+        result = await self.tools["unban_member"].fn(
+            guild_id="100", user_id="9", reason="appeal accepted"
+        )
         assert "Unbanned user 9" in result
         mock_guild.unban.assert_awaited_once()
 
@@ -224,7 +237,9 @@ class TestMemberToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["timeout_member"].fn(guild_id="100", user_id="10", duration_seconds=60, reason="chill")
+        result = await self.tools["timeout_member"].fn(
+            guild_id="100", user_id="10", duration_seconds=60, reason="chill"
+        )
         assert "Timed out user 10 for 60s" in result
         mock_member.timeout.assert_awaited_once()
 
@@ -236,7 +251,9 @@ class TestMemberToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["timeout_member"].fn(guild_id="100", user_id="10", duration_seconds=0)
+        result = await self.tools["timeout_member"].fn(
+            guild_id="100", user_id="10", duration_seconds=0
+        )
         assert "Removed timeout" in result
         mock_member.timeout.assert_awaited_once_with(None, reason=None)
 
@@ -248,7 +265,9 @@ class TestMemberToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["edit_member"].fn(guild_id="100", user_id="11", nickname="NewNick")
+        result = await self.tools["edit_member"].fn(
+            guild_id="100", user_id="11", nickname="NewNick"
+        )
         assert result["id"] == "11"
         mock_member.edit.assert_awaited_once_with(nick="NewNick")
 
@@ -260,7 +279,9 @@ class TestMemberToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["add_member_roles"].fn(guild_id="100", user_id="12", role_ids=["3", "4"], reason="promotion")
+        result = await self.tools["add_member_roles"].fn(
+            guild_id="100", user_id="12", role_ids=["3", "4"], reason="promotion"
+        )
         assert "Added 2 role(s)" in result
         mock_member.add_roles.assert_awaited_once()
 
@@ -272,7 +293,9 @@ class TestMemberToolsBehavior:
         mock_bot.get_guild.return_value = mock_guild
         mock_get_bot.return_value = mock_bot
 
-        result = await self.tools["remove_member_roles"].fn(guild_id="100", user_id="13", role_ids=["5"], reason="demotion")
+        result = await self.tools["remove_member_roles"].fn(
+            guild_id="100", user_id="13", role_ids=["5"], reason="demotion"
+        )
         assert "Removed 1 role(s)" in result
         mock_member.remove_roles.assert_awaited_once()
 

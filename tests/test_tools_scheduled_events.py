@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.scheduled_events import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -38,16 +39,18 @@ def _make_event(*, id=1, name="Test Event"):
 
 
 class TestScheduledEventToolsRegistration:
-    EXPECTED = {
-        "list_scheduled_events", "create_scheduled_event",
-        "edit_scheduled_event", "delete_scheduled_event",
+    EXPECTED: ClassVar[set[str]] = {
+        "list_scheduled_events",
+        "create_scheduled_event",
+        "edit_scheduled_event",
+        "delete_scheduled_event",
     }
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestScheduledEventToolSchemas:
@@ -122,8 +125,10 @@ class TestScheduledEventToolsBehavior:
         test_mcp = FastMCP("test")
         register(test_mcp)
         result = await test_mcp._tool_manager._tools["create_scheduled_event"].fn(
-            guild_id="1", name="Test Event",
-            start_time="2025-06-01T18:00:00Z", entity_type="voice",
+            guild_id="1",
+            name="Test Event",
+            start_time="2025-06-01T18:00:00Z",
+            entity_type="voice",
             channel_id="300",
         )
 
@@ -144,7 +149,9 @@ class TestScheduledEventToolsBehavior:
         register(test_mcp)
         with pytest.raises(ValueError, match="not found"):
             await test_mcp._tool_manager._tools["create_scheduled_event"].fn(
-                guild_id="999", name="E", start_time="2025-06-01T18:00:00Z",
+                guild_id="999",
+                name="E",
+                start_time="2025-06-01T18:00:00Z",
                 entity_type="voice",
             )
 
@@ -161,7 +168,9 @@ class TestScheduledEventToolsBehavior:
         test_mcp = FastMCP("test")
         register(test_mcp)
         result = await test_mcp._tool_manager._tools["edit_scheduled_event"].fn(
-            guild_id="1", event_id="1", name="Updated",
+            guild_id="1",
+            event_id="1",
+            name="Updated",
         )
 
         assert result["name"] == "Test Event"
@@ -182,7 +191,9 @@ class TestScheduledEventToolsBehavior:
         test_mcp = FastMCP("test")
         register(test_mcp)
         result = await test_mcp._tool_manager._tools["edit_scheduled_event"].fn(
-            guild_id="1", event_id="1", name="Updated",
+            guild_id="1",
+            event_id="1",
+            name="Updated",
         )
 
         guild.fetch_scheduled_event.assert_awaited_once_with(1)
@@ -202,7 +213,8 @@ class TestScheduledEventToolsBehavior:
         test_mcp = FastMCP("test")
         register(test_mcp)
         result = await test_mcp._tool_manager._tools["delete_scheduled_event"].fn(
-            guild_id="1", event_id="1",
+            guild_id="1",
+            event_id="1",
         )
 
         assert "Deleted" in result
@@ -220,5 +232,6 @@ class TestScheduledEventToolsBehavior:
         register(test_mcp)
         with pytest.raises(ValueError, match="not found"):
             await test_mcp._tool_manager._tools["delete_scheduled_event"].fn(
-                guild_id="999", event_id="1",
+                guild_id="999",
+                event_id="1",
             )

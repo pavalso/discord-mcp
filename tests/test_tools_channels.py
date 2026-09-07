@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import ClassVar
+from unittest.mock import AsyncMock, MagicMock
 
 import discord
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.channels import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -53,7 +54,7 @@ def _make_channel(
 
 
 class TestChannelToolsRegistration:
-    EXPECTED = {
+    EXPECTED: ClassVar[set[str]] = {
         "list_channels",
         "get_channel",
         "create_text_channel",
@@ -69,7 +70,7 @@ class TestChannelToolsRegistration:
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestChannelToolSchemas:
@@ -117,7 +118,9 @@ class TestChannelToolSchemas:
 class TestListChannels:
     async def test_returns_all_channels(self, inject_bot):
         ch1 = _make_channel(id=1, name="general", position=0)
-        ch2 = _make_channel(id=2, name="voice", type="voice", position=1, bitrate=64000, user_limit=10)
+        ch2 = _make_channel(
+            id=2, name="voice", type="voice", position=1, bitrate=64000, user_limit=10
+        )
         inject_bot.get_guild.return_value = MagicMock(channels=[ch1, ch2])
 
         result = await mcp._tool_manager._tools["list_channels"].fn(guild_id="111")
@@ -290,7 +293,9 @@ class TestEditChannel:
         ch.edit = AsyncMock(return_value=None)
         inject_bot.get_channel.return_value = ch
 
-        result = await mcp._tool_manager._tools["edit_channel"].fn(channel_id="102", name="unchanged")
+        result = await mcp._tool_manager._tools["edit_channel"].fn(
+            channel_id="102", name="unchanged"
+        )
 
         assert result["name"] == "unchanged"
 

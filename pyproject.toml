@@ -21,11 +21,58 @@ discord-mcp = "discord_mcp.server:main"
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
+    "ruff>=0.16.0",
+    "mypy>=1.13.0",
 ]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# The docs/ code fences are discord.py signature sketches, not runnable Python
+# (`def f(*, timeout: float = 30.0)` with aligned trailing comments). Formatting
+# them destroys the alignment and the signatures they illustrate.
+extend-exclude = ["docs"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific
+    "ANN",    # flake8-annotations -- CLAUDE.md mandates typed signatures
+]
+ignore = [
+    "ANN401",  # Allow `Any` where discord.py itself is untyped
+    "B008",    # FastMCP and discord.py use callables in defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use fixtures and mocks whose types add noise without adding safety.
+"tests/*" = ["ANN"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["discord_mcp"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+# discord.py ships types, but its dynamic surface (Guild.voice_client,
+# AudioSource subclassing) trips strict inference in ways we cannot fix here.
+module = "discord.*"
+follow_imports = "silent"
 
 [build-system]
 requires = ["hatchling"]

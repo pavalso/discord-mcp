@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.guilds import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -47,13 +48,13 @@ def _make_mock_guild(
 
 
 class TestGuildToolsRegistration:
-    EXPECTED = {"list_guilds", "get_guild", "edit_guild"}
+    EXPECTED: ClassVar[set[str]] = {"list_guilds", "get_guild", "edit_guild"}
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestGuildToolSchemas:
@@ -74,9 +75,14 @@ class TestGuildToolSchemas:
         schema = _get_tool_schema("edit_guild")
         props = schema.get("properties", {})
         for field in (
-            "name", "description", "verification_level",
-            "default_notifications", "explicit_content_filter",
-            "afk_channel_id", "afk_timeout", "system_channel_id",
+            "name",
+            "description",
+            "verification_level",
+            "default_notifications",
+            "explicit_content_filter",
+            "afk_channel_id",
+            "afk_timeout",
+            "system_channel_id",
         ):
             assert field in props, f"Missing field: {field}"
 
@@ -151,9 +157,7 @@ class TestGuildToolsBehavior:
         bot.get_guild.return_value = guild
         mock_get_bot.return_value = bot
 
-        result = await tool_mcp._tool_manager._tools["edit_guild"].fn(
-            guild_id="1", name="New Name"
-        )
+        result = await tool_mcp._tool_manager._tools["edit_guild"].fn(guild_id="1", name="New Name")
 
         guild.edit.assert_awaited_once_with(name="New Name")
         assert result["id"] == "1"

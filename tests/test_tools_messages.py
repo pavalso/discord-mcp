@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.messages import register
-from mcp.server.fastmcp import FastMCP
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -61,7 +61,7 @@ def _tool_fn(name: str):
 
 
 class TestMessageToolsRegistration:
-    EXPECTED = {
+    EXPECTED: ClassVar[set[str]] = {
         "send_message",
         "send_embed",
         "edit_message",
@@ -80,11 +80,11 @@ class TestMessageToolsRegistration:
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
     def test_register_is_idempotent_on_main_server(self):
         names = {t.name for t in mcp._tool_manager.list_tools()}
-        assert self.EXPECTED <= names
+        assert names >= self.EXPECTED
 
 
 # ---------------------------------------------------------------------------
@@ -144,7 +144,15 @@ class TestMessageToolSchemas:
     def test_send_embed_has_optional_fields(self):
         schema = _get_tool_schema("send_embed")
         props = schema.get("properties", {})
-        for key in ("title", "description", "color", "fields", "footer_text", "image_url", "thumbnail_url"):
+        for key in (
+            "title",
+            "description",
+            "color",
+            "fields",
+            "footer_text",
+            "image_url",
+            "thumbnail_url",
+        ):
             assert key in props
         required = schema.get("required", [])
         assert "title" not in required
@@ -306,7 +314,9 @@ class TestEditMessage:
         channel.fetch_message = AsyncMock(return_value=msg)
         inject_bot.get_channel.return_value = channel
 
-        result = await _tool_fn("edit_message")(channel_id="100", message_id="1000", content="edited")
+        result = await _tool_fn("edit_message")(
+            channel_id="100", message_id="1000", content="edited"
+        )
 
         msg.edit.assert_awaited_once_with(content="edited")
         assert result["id"] == "1000"

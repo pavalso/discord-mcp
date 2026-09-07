@@ -10,7 +10,6 @@ import pytest
 import discord_mcp.bot as bot_module
 from discord_mcp.bot import get_bot, start_bot, stop_bot
 
-
 # ---------------------------------------------------------------------------
 # get_bot
 # ---------------------------------------------------------------------------
@@ -53,11 +52,13 @@ class TestStartBot:
         mock_bot.start = AsyncMock(side_effect=lambda token: asyncio.sleep(999))
         mock_bot.event = MagicMock(side_effect=lambda fn: fn)
 
-        with patch.object(bot_module, "_create_bot", return_value=mock_bot):
-            # Temporarily shorten the timeout so this test runs fast
-            with patch("discord_mcp.bot.asyncio.wait_for", side_effect=asyncio.TimeoutError):
-                with pytest.raises(RuntimeError, match="failed to connect within"):
-                    await start_bot("fake-token")
+        # wait_for is patched to fire immediately so this test does not wait 30s.
+        with (
+            patch.object(bot_module, "_create_bot", return_value=mock_bot),
+            patch("discord_mcp.bot.asyncio.wait_for", side_effect=asyncio.TimeoutError),
+            pytest.raises(RuntimeError, match="failed to connect within"),
+        ):
+            await start_bot("fake-token")
 
     async def test_successful_start(self):
         mock_bot = MagicMock()

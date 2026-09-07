@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.emojis import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -43,16 +44,19 @@ def _make_mock_sticker(**overrides):
 
 
 class TestEmojiToolsRegistration:
-    EXPECTED = {
-        "list_emojis", "create_emoji", "delete_emoji",
-        "list_stickers", "delete_sticker",
+    EXPECTED: ClassVar[set[str]] = {
+        "list_emojis",
+        "create_emoji",
+        "delete_emoji",
+        "list_stickers",
+        "delete_sticker",
     }
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestEmojiToolSchemas:
@@ -141,7 +145,9 @@ class TestEmojiToolsBehavior:
         assert result["id"] == "1001"
         assert result["name"] == "test_emoji"
         mock_guild.create_custom_emoji.assert_called_once_with(
-            name="test_emoji", image=b"fake-image-data", reason=None,
+            name="test_emoji",
+            image=b"fake-image-data",
+            reason=None,
         )
 
     @patch("discord_mcp.tools.emojis.get_bot")
@@ -167,7 +173,9 @@ class TestEmojiToolsBehavior:
 
         test_mcp = FastMCP("test")
         register(test_mcp)
-        result = await test_mcp._tool_manager._tools["delete_emoji"].fn(guild_id="1", emoji_id="1001")
+        result = await test_mcp._tool_manager._tools["delete_emoji"].fn(
+            guild_id="1", emoji_id="1001"
+        )
 
         assert result == "Deleted emoji 1001 from guild 1."
         mock_guild.delete_emoji.assert_called_once()
@@ -221,7 +229,9 @@ class TestEmojiToolsBehavior:
 
         test_mcp = FastMCP("test")
         register(test_mcp)
-        result = await test_mcp._tool_manager._tools["delete_sticker"].fn(guild_id="1", sticker_id="2001")
+        result = await test_mcp._tool_manager._tools["delete_sticker"].fn(
+            guild_id="1", sticker_id="2001"
+        )
 
         assert result == "Deleted sticker 2001 from guild 1."
         mock_guild.delete_sticker.assert_called_once()
@@ -235,4 +245,6 @@ class TestEmojiToolsBehavior:
         test_mcp = FastMCP("test")
         register(test_mcp)
         with pytest.raises(ValueError, match="Guild 999 not found"):
-            await test_mcp._tool_manager._tools["delete_sticker"].fn(guild_id="999", sticker_id="2001")
+            await test_mcp._tool_manager._tools["delete_sticker"].fn(
+                guild_id="999", sticker_id="2001"
+            )

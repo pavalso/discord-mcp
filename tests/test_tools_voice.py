@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools import voice as voice_module
 from discord_mcp.tools.voice import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -102,7 +103,7 @@ def _connected_guild(
 
 
 class TestVoiceToolsRegistration:
-    EXPECTED = {
+    EXPECTED: ClassVar[set[str]] = {
         "join_voice",
         "leave_voice",
         "voice_status",
@@ -118,7 +119,7 @@ class TestVoiceToolsRegistration:
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestVoiceToolSchemas:
@@ -429,7 +430,9 @@ class TestBuildAudioSource:
         clip.write_bytes(b"not really audio")
 
         with patch.object(voice_module.discord, "FFmpegPCMAudio") as ffmpeg:
-            ffmpeg.return_value = MagicMock(spec=discord.AudioSource, **{"is_opus.return_value": False})
+            ffmpeg.return_value = MagicMock(
+                spec=discord.AudioSource, **{"is_opus.return_value": False}
+            )
             source = voice_module._build_audio_source(str(clip), 0.5)
 
         ffmpeg.assert_called_once_with(str(clip), executable="ffmpeg", before_options=None)
@@ -438,7 +441,9 @@ class TestBuildAudioSource:
 
     def test_adds_reconnect_options_for_streams(self):
         with patch.object(voice_module.discord, "FFmpegPCMAudio") as ffmpeg:
-            ffmpeg.return_value = MagicMock(spec=discord.AudioSource, **{"is_opus.return_value": False})
+            ffmpeg.return_value = MagicMock(
+                spec=discord.AudioSource, **{"is_opus.return_value": False}
+            )
             voice_module._build_audio_source("https://example.com/stream.mp3", 1.0)
 
         _, kwargs = ffmpeg.call_args
@@ -452,7 +457,9 @@ class TestBuildAudioSource:
         monkeypatch.setenv("DISCORD_MCP_FFMPEG", str(fake_ffmpeg))
 
         with patch.object(voice_module.discord, "FFmpegPCMAudio") as ffmpeg:
-            ffmpeg.return_value = MagicMock(spec=discord.AudioSource, **{"is_opus.return_value": False})
+            ffmpeg.return_value = MagicMock(
+                spec=discord.AudioSource, **{"is_opus.return_value": False}
+            )
             voice_module._build_audio_source(str(clip), 1.0)
 
         _, kwargs = ffmpeg.call_args

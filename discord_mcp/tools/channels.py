@@ -308,9 +308,9 @@ def register(mcp: FastMCP) -> None:
             raise ValueError(f"target_type must be 'role' or 'member', got '{target_type}'.")
 
         overwrite = discord.PermissionOverwrite()
-        for perm in (allow or []):
+        for perm in allow or []:
             setattr(overwrite, perm, True)
-        for perm in (deny or []):
+        for perm in deny or []:
             setattr(overwrite, perm, False)
 
         await channel.set_permissions(target, overwrite=overwrite, reason=reason)

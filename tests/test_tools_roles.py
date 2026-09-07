@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 from discord_mcp.server import mcp
 from discord_mcp.tools.roles import register
-from mcp.server.fastmcp import FastMCP
 
 
 def _get_tool_schema(name: str) -> dict:
@@ -47,13 +48,19 @@ def _make_role(
 
 
 class TestRoleToolsRegistration:
-    EXPECTED = {"list_roles", "get_role", "create_role", "edit_role", "delete_role"}
+    EXPECTED: ClassVar[set[str]] = {
+        "list_roles",
+        "get_role",
+        "create_role",
+        "edit_role",
+        "delete_role",
+    }
 
     def test_all_tools_registered(self):
         test_mcp = FastMCP("test")
         register(test_mcp)
         names = {t.name for t in test_mcp._tool_manager.list_tools()}
-        assert self.EXPECTED == names
+        assert names == self.EXPECTED
 
 
 class TestRoleToolSchemas:

@@ -78,7 +78,8 @@ def register(mcp: FastMCP) -> None:
             color: Role color as integer (e.g. 0xFF0000 for red).
             hoist: Whether to display the role separately in the member sidebar.
             mentionable: Whether the role can be mentioned.
-            permissions: List of permission names to grant (e.g. ["send_messages", "manage_channels"]).
+            permissions: List of permission names to grant
+                (e.g. ["send_messages", "manage_channels"]).
             reason: Audit log reason.
         """
         bot = get_bot()

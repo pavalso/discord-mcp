@@ -129,7 +129,8 @@ async def change_presence(
             return "Error: activity_name is required when activity_type is provided."
         atype = activity_type_map.get(activity_type.lower())
         if atype is None:
-            return f"Error: Invalid activity_type '{activity_type}'. Must be one of: {', '.join(activity_type_map)}."
+            valid = ", ".join(activity_type_map)
+            return f"Error: Invalid activity_type '{activity_type}'. Must be one of: {valid}."
         activity = discord.Activity(type=atype, name=activity_name)
 
     await bot.change_presence(status=resolved_status, activity=activity)
@@ -165,7 +166,7 @@ register_voice(mcp)
 # ---------------------------------------------------------------------------
 
 
-def main():
+def main() -> None:
     mcp.run(transport="stdio")
 
 

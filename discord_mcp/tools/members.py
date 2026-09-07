@@ -131,7 +131,11 @@ def register(mcp: FastMCP) -> None:
         guild = bot.get_guild(int(guild_id))
         if guild is None:
             raise ValueError(f"Guild {guild_id} not found (not in cache).")
-        await guild.ban(discord.Object(id=int(user_id)), delete_message_seconds=delete_message_seconds, reason=reason)
+        await guild.ban(
+            discord.Object(id=int(user_id)),
+            delete_message_seconds=delete_message_seconds,
+            reason=reason,
+        )
         return f"Banned user {user_id} from guild {guild_id}."
 
     @mcp.tool()
@@ -168,7 +172,8 @@ def register(mcp: FastMCP) -> None:
         Args:
             guild_id: Target guild.
             user_id: Member to timeout.
-            duration_seconds: Timeout duration in seconds (max 2419200 = 28 days). Use 0 to remove timeout.
+            duration_seconds: Timeout duration in seconds (max 2419200 = 28 days).
+                Use 0 to remove an existing timeout.
             reason: Audit log reason.
         """
         bot = get_bot()
@@ -290,4 +295,8 @@ def register(mcp: FastMCP) -> None:
         if user is None:
             user = await bot.fetch_user(int(user_id))
         message = await user.send(content)
-        return {"id": str(message.id), "content": message.content, "channel_id": str(message.channel.id)}
+        return {
+            "id": str(message.id),
+            "content": message.content,
+            "channel_id": str(message.channel.id),
+        }

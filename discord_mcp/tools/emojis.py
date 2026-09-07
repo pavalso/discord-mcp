@@ -70,9 +70,8 @@ def register(mcp: FastMCP) -> None:
         guild = bot.get_guild(int(guild_id))
         if guild is None:
             raise ValueError(f"Guild {guild_id} not found (not in cache).")
-        async with aiohttp.ClientSession() as session:
-            async with session.get(image_url) as resp:
-                image_data = await resp.read()
+        async with aiohttp.ClientSession() as session, session.get(image_url) as resp:
+            image_data = await resp.read()
         emoji = await guild.create_custom_emoji(name=name, image=image_data, reason=reason)
         return _emoji_to_dict(emoji)
 

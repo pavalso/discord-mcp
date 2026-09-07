@@ -22,7 +22,9 @@ def _message_to_dict(message: discord.Message) -> dict:
         "tts": message.tts,
         "type": str(message.type),
         "jump_url": message.jump_url,
-        "attachments": [{"id": str(a.id), "filename": a.filename, "url": a.url} for a in message.attachments],
+        "attachments": [
+            {"id": str(a.id), "filename": a.filename, "url": a.url} for a in message.attachments
+        ],
         "embeds": [e.to_dict() for e in message.embeds],
     }
 
