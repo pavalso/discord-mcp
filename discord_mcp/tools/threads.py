@@ -139,6 +139,39 @@ def register(mcp: FastMCP) -> None:
         return [_thread_to_dict(t) for t in threads]
 
     @mcp.tool()
+    async def list_archived_threads(
+        channel_id: str,
+        *,
+        private: bool = False,
+        joined: bool = False,
+        limit: int = 50,
+    ) -> list[dict]:
+        """List archived threads in a channel.
+
+        list_active_threads covers a whole guild but only returns threads that
+        are still active. Archived threads are per-channel, so this takes a
+        channel rather than a guild.
+
+        Args:
+            channel_id: Channel whose archived threads to list.
+            private: List private archived threads instead of public ones.
+            joined: Only list private threads the bot has joined. Requires
+                private=True.
+            limit: Maximum number of threads to return.
+        """
+        if joined and not private:
+            raise ValueError("joined=True only applies to private threads; pass private=True.")
+
+        bot = get_bot()
+        channel = require_text_channel(bot, channel_id)
+
+        threads = [
+            _thread_to_dict(t)
+            async for t in channel.archived_threads(limit=limit, private=private, joined=joined)
+        ]
+        return threads
+
+    @mcp.tool()
     async def join_thread(thread_id: str) -> str:
         """Make the bot join a thread.
 

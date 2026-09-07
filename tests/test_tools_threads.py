@@ -55,6 +55,7 @@ class TestThreadToolsRegistration:
         "edit_thread",
         "delete_thread",
         "list_active_threads",
+        "list_archived_threads",
         "join_thread",
         "leave_thread",
         "add_thread_member",
@@ -245,6 +246,71 @@ class TestThreadToolsBehavior:
         test_mcp = _build_mcp()
         with pytest.raises(ValueError, match="not found"):
             await test_mcp._tool_manager._tools["list_active_threads"].fn(guild_id="999")
+
+    @patch("discord_mcp.tools.threads.get_bot")
+    async def test_list_archived_threads(self, mock_get_bot):
+        mock_bot = MagicMock()
+        mock_get_bot.return_value = mock_bot
+        mock_channel = MagicMock()
+        mock_bot.get_channel.return_value = mock_channel
+        t1 = _make_mock_thread(id=1, name="old-1")
+        t2 = _make_mock_thread(id=2, name="old-2")
+
+        def archived_threads(*, limit, private, joined):
+            async def gen():
+                for t in (t1, t2):
+                    yield t
+
+            return gen()
+
+        mock_channel.archived_threads = archived_threads
+
+        test_mcp = _build_mcp()
+        result = await test_mcp._tool_manager._tools["list_archived_threads"].fn(channel_id="10")
+        assert [r["name"] for r in result] == ["old-1", "old-2"]
+
+    @patch("discord_mcp.tools.threads.get_bot")
+    async def test_list_archived_threads_passes_options(self, mock_get_bot):
+        mock_bot = MagicMock()
+        mock_get_bot.return_value = mock_bot
+        mock_channel = MagicMock()
+        mock_bot.get_channel.return_value = mock_channel
+        captured = {}
+
+        def archived_threads(**kwargs):
+            captured.update(kwargs)
+
+            async def gen():
+                if False:
+                    yield None
+
+            return gen()
+
+        mock_channel.archived_threads = archived_threads
+
+        test_mcp = _build_mcp()
+        result = await test_mcp._tool_manager._tools["list_archived_threads"].fn(
+            channel_id="10", private=True, joined=True, limit=5
+        )
+        assert result == []
+        assert captured == {"limit": 5, "private": True, "joined": True}
+
+    async def test_list_archived_threads_rejects_joined_without_private(self):
+        test_mcp = _build_mcp()
+        with pytest.raises(ValueError, match="only applies to private threads"):
+            await test_mcp._tool_manager._tools["list_archived_threads"].fn(
+                channel_id="10", joined=True
+            )
+
+    @patch("discord_mcp.tools.threads.get_bot")
+    async def test_list_archived_threads_channel_not_found(self, mock_get_bot):
+        mock_bot = MagicMock()
+        mock_get_bot.return_value = mock_bot
+        mock_bot.get_channel.return_value = None
+
+        test_mcp = _build_mcp()
+        with pytest.raises(ValueError, match="Channel 999 not found"):
+            await test_mcp._tool_manager._tools["list_archived_threads"].fn(channel_id="999")
 
     @patch("discord_mcp.tools.threads.get_bot")
     async def test_join_thread(self, mock_get_bot):

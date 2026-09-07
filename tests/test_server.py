@@ -18,7 +18,7 @@ class TestServerSetup:
 
     def test_total_tool_count(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
-        assert len(tools) == 88
+        assert len(tools) == 89
 
     def test_all_tools_have_descriptions(self, mcp_server):
         tools = mcp_server._tool_manager.list_tools()
@@ -67,6 +67,7 @@ EXPECTED_TOOL_NAMES = {
     "edit_thread",
     "delete_thread",
     "list_active_threads",
+    "list_archived_threads",
     "join_thread",
     "leave_thread",
     "add_thread_member",

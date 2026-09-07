@@ -1,6 +1,6 @@
 # Threads Tools -- discord.py API Reference
 
-Tools in `discord_mcp/tools/threads.py` (8 tools).
+Tools in `discord_mcp/tools/threads.py` (9 tools).
 
 ---
 
@@ -167,6 +167,44 @@ Returns all active (non-archived) threads the bot can access. This is an API cal
 - `parent` -> `Optional[Union[ForumChannel, TextChannel]]`
 - `owner` -> `Optional[Member]`
 - `applied_tags` -> `List[ForumTag]` (forum threads only)
+
+---
+
+## list_archived_threads
+
+**Tool params:** `channel_id: str`, `*, private: bool = False`, `joined: bool = False`, `limit: int = 50`
+
+### API Calls
+
+```python
+channel = bot.get_channel(int(channel_id))
+```
+
+#### `TextChannel.archived_threads()`
+
+```python
+async for thread in channel.archived_threads(
+    *,
+    limit: Optional[int] = 50,       # None for all
+    before: Union[Snowflake, datetime] = None,
+    private: bool = False,           # Private instead of public threads
+    joined: bool = False,            # Only private threads the bot joined
+) -> AsyncIterator[Thread]
+```
+
+**Permissions:** `read_message_history`. `private=True` additionally needs
+`manage_threads`, unless `joined=True`.
+
+**Notes:**
+- Archived threads are **per channel**, which is why this takes a `channel_id`
+  while `list_active_threads` takes a `guild_id`. There is no guild-wide
+  archived listing in the API.
+- `joined=True` is only meaningful for private threads; the tool rejects
+  `joined=True` without `private=True` rather than passing a combination the
+  API ignores.
+- Unlike `Guild.active_threads()`, which returns a list, this is an async
+  iterator and is consumed with `async for`.
+- Threads are returned newest-archived first.
 
 ---
 
